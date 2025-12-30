@@ -1,0 +1,128 @@
+{% load static %}
+<div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content border-0 shadow">
+        <div id="modal-loader" class="overlay" style="display: none">
+            <i class="fas fa-3x fa-sync fa-spin text-primary"></i>
+        </div>
+        
+        <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+                <i class="fas fa-plus mr-2"></i>Nuevo Plan
+            </h5>
+            <button type="button" class="close text-white" data-dismiss="modal">
+                <span>&times;</span>
+            </button>
+        </div>
+
+        <form id="form-plan" action="{% url 'apps.sales:save_plan' %}" method="POST">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="name">Nombre del Plan <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name" required autocomplete="off"
+                           placeholder="Ej: Plan Interdiario, Plan Diario">
+                </div>
+                <div class="form-group">
+                    <label for="cycle">Ciclo <span class="text-danger">*</span></label>
+                    <select class="form-control" id="cycle" name="cycle" required autocomplete="off">
+                        <option value="">Seleccione un ciclo...</option>
+                        {% for cycle in cycles %}
+                            <option value="{{ cycle.id }}">{{ cycle.name }} - {{ cycle.duration_months }} mes(es)</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="turn">Turno</label>
+                    <select class="form-control" id="turn" name="turn" autocomplete="off">
+                        <option value="">Seleccione un turno...</option>
+                        {% for turn in turns %}
+                            <option value="{{ turn.id }}">{{ turn.name }} - {{ turn.schedule }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Días de la Semana <span class="text-danger">*</span></label>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="monday" name="monday" value="true">
+                                <label class="form-check-label" for="monday">Lunes</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="tuesday" name="tuesday" value="true">
+                                <label class="form-check-label" for="tuesday">Martes</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="wednesday" name="wednesday" value="true">
+                                <label class="form-check-label" for="wednesday">Miércoles</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="thursday" name="thursday" value="true">
+                                <label class="form-check-label" for="thursday">Jueves</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="friday" name="friday" value="true">
+                                <label class="form-check-label" for="friday">Viernes</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="saturday" name="saturday" value="true">
+                                <label class="form-check-label" for="saturday">Sábado</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="price">Precio (S/) <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" class="form-control" id="price" name="price" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="description">Descripción</label>
+                    <textarea class="form-control" id="description" name="description" rows="3" autocomplete="off"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#form-plan').submit(function(e) {
+            e.preventDefault();
+            $('#modal-loader').show();
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: $(this).serialize(),
+                headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        toastr.error(response.message);
+                    }
+                    $('#modal-loader').hide();
+                },
+                error: function() {
+                    toastr.error('Error al guardar el plan');
+                    $('#modal-loader').hide();
+                }
+            });
+        });
+    });
+</script>
+

@@ -1,0 +1,824 @@
+{% extends 'home.html' %}
+{% load static %}
+
+{% block title %}Reporte Mensual - SPACE JUMP{% endblock %}
+
+{% block body %}
+    <div class="container-fluid roboto-condensed-regular">
+        <!-- Header del Reporte -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-lg"
+                     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="card-body text-white py-4">
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <h2 class="mb-2">
+                                    <i class="fas fa-basketball-ball mr-3"></i>
+                                    Reporte Mensual de Academia
+                                </h2>
+                                <p class="mb-0 opacity-90">
+                                    Análisis completo de inscripciones, deportistas, ingresos y gastos del mes seleccionado
+                                </p>
+                            </div>
+                            <div class="col-lg-4 text-right">
+                                <div class="report-period">
+                                    <h4 class="mb-1" id="current-month">Mes Actual</h4>
+                                    <small class="opacity-75" id="subsidiary-name">Todas las sucursales</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-filter mr-2"></i>
+                            Filtros de Reporte
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="report-form">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="report_month" class="font-weight-bold">Mes a Reportar</label>
+                                        <input type="month" class="form-control" id="report_month" name="report_month"
+                                               value="{{ current_month }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="subsidiary" class="font-weight-bold">Sucursal</label>
+                                        <select class="form-control" id="subsidiary" name="subsidiary">
+                                            <option selected value="0">Todas las sucursales</option>
+                                            {% for subsidiary in subsidiary_set %}
+                                                <option value="{{ subsidiary.id }}">{{ subsidiary.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">&nbsp;</label>
+                                        <div>
+                                            <button type="submit" class="btn btn-primary btn-lg">
+                                                <i class="fas fa-chart-line mr-2"></i>
+                                                Generar Reporte
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas Principales -->
+        <div class="row mb-4" id="stats-section" style="display: none;">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-gradient-primary text-white shadow-lg">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h3 class="mb-0" id="total-enrollments">0</h3>
+                                <p class="mb-0">Total Inscripciones</p>
+                                <small class="opacity-75">
+                                    <i class="fas fa-user-plus mr-1"></i>
+                                    Del mes
+                                </small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-user-plus fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-gradient-success text-white shadow-lg">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h3 class="mb-0" id="active-enrollments">0</h3>
+                                <p class="mb-0">Inscripciones Activas</p>
+                                <small class="opacity-75">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    Pagos completos
+                                </small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-gradient-warning text-white shadow-lg">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h3 class="mb-0" id="pending-enrollments">0</h3>
+                                <p class="mb-0">Pagos Pendientes</p>
+                                <small class="opacity-75">
+                                    <i class="fas fa-money-bill-wave mr-1"></i>
+                                    Saldo: <span id="total-pending">S/ 0.00</span>
+                                </small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-clock fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-gradient-info text-white shadow-lg">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h3 class="mb-0" id="total-students">0</h3>
+                                <p class="mb-0">Total Deportistas</p>
+                                <small class="opacity-75">
+                                    <i class="fas fa-users mr-1"></i>
+                                    Nuevos: <span id="new-students">0</span>
+                                </small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-users fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INGRESOS DEL MES -->
+        <div class="row mb-4" id="income-section" style="display: none;">
+            <div class="col-12 mb-2">
+                <h5 class="text-muted">
+                    <i class="fas fa-cash-register mr-2"></i>
+                    Ingresos del Mes
+                </h5>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-3">
+                <div class="card bg-gradient-info text-white shadow-lg">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h3 class="mb-0" id="income-from-enrollments">S/ 0.00</h3>
+                                <p class="mb-0">De Inscripciones</p>
+                                <small class="opacity-75">
+                                    <i class="fas fa-user-plus mr-1"></i>
+                                    Adelantos recibidos
+                                </small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-hand-holding-usd fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-3">
+                <div class="card bg-gradient-success text-white shadow-lg">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h3 class="mb-0" id="monthly-income">S/ 0.00</h3>
+                                <p class="mb-0">Total Ingresos</p>
+                                <small class="opacity-75">
+                                    <i class="fas fa-plus-circle mr-1"></i>
+                                    Todo lo que entró a caja
+                                </small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-3">
+                <div class="card bg-gradient-danger text-white shadow-lg">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h3 class="mb-0" id="monthly-expenses">S/ 0.00</h3>
+                                <p class="mb-0">Gastos Totales</p>
+                                <small class="opacity-75">
+                                    <i class="fas fa-arrow-down mr-1"></i>
+                                    Salidas de caja
+                                </small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-receipt fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nueva Fila para la Métrica de Diferencia -->
+        <div class="row mb-4" id="profit-section" style="display: none;">
+            <div class="col-lg-4 col-md-6 mb-3 mx-auto">
+                <div class="card bg-gradient-primary text-white shadow-lg">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h3 class="mb-0" id="monthly-profit">S/ 0.00</h3>
+                                <p class="mb-0">Diferencia (Ingresos - Gastos)</p>
+                                <small class="opacity-75">
+                                    <i class="fas fa-chart-line mr-1"></i>
+                                    Resultado financiero
+                                </small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-balance-scale fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos Principales -->
+        <div class="row mb-4" id="charts-section" style="display: none;">
+            <!-- Gráfico de Inscripciones por Ciclo -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-pie mr-2"></i>
+                            Inscripciones por Ciclo
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="enrollmentsByCycleChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Inscripciones por Sede -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-gradient-info text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-bar mr-2"></i>
+                            Inscripciones por Sede
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="enrollmentsBySubsidiaryChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Inscripciones por Horario -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-gradient-success text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-line mr-2"></i>
+                            Inscripciones por Horario
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="enrollmentsByScheduleChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Inscripciones por Profesor -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-gradient-warning text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chalkboard-teacher mr-2"></i>
+                            Inscripciones por Profesor
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="enrollmentsByTeacherChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos Secundarios -->
+        <div class="row mb-4" id="secondary-charts-section" style="display: none;">
+            <!-- Inscripciones por Turno -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-gradient-info text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-clock mr-2"></i>
+                            Inscripciones por Turno
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="enrollmentsByTimeslotChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inscripciones por Día -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-gradient-secondary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-calendar-day mr-2"></i>
+                            Inscripciones por Día del Mes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="dailyEnrollmentsChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Resumen -->
+        <div class="row mb-4" id="summary-section" style="display: none;">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-gradient-dark text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-table mr-2"></i>
+                            Resumen Ejecutivo
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th>Métrica</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-right">Valor Total</th>
+                                    <th class="text-center">Estado</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td><i class="fas fa-user-plus text-primary mr-2"></i>Total Inscripciones</td>
+                                    <td class="text-center" id="summary-completed-count">0</td>
+                                    <td class="text-right" id="summary-completed-total">S/ 0.00</td>
+                                    <td class="text-center"><span class="badge badge-primary">Inscripciones</span></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-check-circle text-success mr-2"></i>Inscripciones Activas</td>
+                                    <td class="text-center" id="summary-delivery-count">0</td>
+                                    <td class="text-right">-</td>
+                                    <td class="text-center"><span class="badge badge-success">Pagado</span></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-clock text-warning mr-2"></i>Pagos Pendientes</td>
+                                    <td class="text-center" id="summary-pending-count">0</td>
+                                    <td class="text-right font-weight-bold" id="summary-pending-balance">S/ 0.00</td>
+                                    <td class="text-center"><span class="badge badge-warning">Por Cobrar</span></td>
+                                </tr>
+                                <tr class="table-info">
+                                    <td><i class="fas fa-hand-holding-usd text-info mr-2"></i>Ingresos de Inscripciones</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-right font-weight-bold" id="summary-income-current">S/ 0.00</td>
+                                    <td class="text-center"><span class="badge badge-info">Cobrado</span></td>
+                                </tr>
+                                <tr class="table-success">
+                                    <td><i class="fas fa-cash-register text-success mr-2"></i>Total Cobrado en el Mes</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-right font-weight-bold" id="summary-income-total">S/ 0.00</td>
+                                    <td class="text-center"><span class="badge badge-success">Cobrado</span></td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td><i class="fas fa-arrow-down text-danger mr-2"></i>Gastos Totales</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-right font-weight-bold" id="summary-expenses-total">S/ 0.00</td>
+                                    <td class="text-center"><span class="badge badge-danger">Gasto</span></td>
+                                </tr>
+                                <tr class="table-primary">
+                                    <td><i class="fas fa-balance-scale text-primary mr-2"></i>Diferencia (Ingresos - Gastos)</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-right font-weight-bold" id="summary-profit-total">S/ 0.00</td>
+                                    <td class="text-center"><span class="badge badge-primary">Resultado</span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensaje de Carga -->
+        <div class="row" id="loading-section">
+            <div class="col-12 text-center py-5">
+                <div class="card border-0 shadow">
+                    <div class="card-body">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="sr-only">Cargando...</span>
+                        </div>
+                        <h5 class="text-muted">Seleccione un mes y genere el reporte</h5>
+                        <p class="text-muted">Los datos se cargarán automáticamente</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrajs %}
+    <!-- Chart.js Datalabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script>
+        $(document).ready(function () {
+            // Registrar el plugin de datalabels
+            Chart.register(ChartDataLabels);
+
+            // Variables globales para los gráficos
+            let enrollmentsByCycleChart = null;
+            let enrollmentsBySubsidiaryChart = null;
+            let enrollmentsByScheduleChart = null;
+            let enrollmentsByTeacherChart = null;
+            let enrollmentsByTimeslotChart = null;
+            let dailyEnrollmentsChart = null;
+
+            // Manejar envío del formulario
+            $('#report-form').on('submit', function (e) {
+                e.preventDefault();
+                generateReport();
+            });
+
+            // Cargar automáticamente el reporte del mes actual
+            setTimeout(function () {
+                generateReport();
+            }, 500);
+
+            function generateReport() {
+                // Mostrar loading
+                $('#loading-section').show();
+                $('#stats-section, #income-section, #profit-section, #charts-section, #secondary-charts-section, #summary-section').hide();
+
+                const formData = {
+                    'report_month': $('#report_month').val(),
+                    'subsidiary': $('#subsidiary').val(),
+                    'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+                };
+
+                console.log('Generando reporte con datos:', formData);
+
+                $.ajax({
+                    url: '{% url "apps.accounting:monthly_report" %}',
+                    method: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        if (response.success) {
+                            updateStats(response.stats);
+                            updateCharts(response.chart_data);
+                            updateSummary(response.stats);
+                            updateHeader(response.month_name, response.subsidiary);
+
+                            // Mostrar secciones
+                            $('#loading-section').hide();
+                            $('#stats-section, #income-section, #profit-section, #charts-section, #secondary-charts-section, #summary-section').show();
+                        } else {
+                            showError('Error: ' + response.message);
+                            $('#loading-section').hide();
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        let errorMessage = 'Error de conexión al generar el reporte';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                            if (xhr.responseJSON.error_detail) {
+                                console.error('Detalle del error:', xhr.responseJSON.error_detail);
+                                console.error('Traceback:', xhr.responseJSON.traceback);
+                            }
+                        }
+                        showError(errorMessage);
+                        $('#loading-section').hide();
+                    }
+                });
+            }
+
+            function updateStats(stats) {
+                $('#total-enrollments').text(stats.total_enrollments || 0);
+                $('#active-enrollments').text(stats.active_enrollments || 0);
+                $('#pending-enrollments').text(stats.pending_enrollments || 0);
+                $('#total-pending').text('S/ ' + parseFloat(stats.total_pending || 0).toFixed(2));
+                $('#total-students').text(stats.total_students || 0);
+                $('#new-students').text(stats.new_students || 0);
+                $('#income-from-enrollments').text('S/ ' + parseFloat(stats.income_from_enrollments || 0).toFixed(2));
+                $('#monthly-income').text('S/ ' + parseFloat(stats.monthly_income_total || 0).toFixed(2));
+                $('#monthly-expenses').text('S/ ' + parseFloat(stats.monthly_expenses_total || 0).toFixed(2));
+                $('#monthly-profit').text('S/ ' + parseFloat(stats.monthly_profit_total || 0).toFixed(2));
+            }
+
+            function updateCharts(chartData) {
+                // Destruir gráficos existentes
+                if (enrollmentsByCycleChart) enrollmentsByCycleChart.destroy();
+                if (enrollmentsBySubsidiaryChart) enrollmentsBySubsidiaryChart.destroy();
+                if (enrollmentsByScheduleChart) enrollmentsByScheduleChart.destroy();
+                if (enrollmentsByTeacherChart) enrollmentsByTeacherChart.destroy();
+                if (enrollmentsByTimeslotChart) enrollmentsByTimeslotChart.destroy();
+                if (dailyEnrollmentsChart) dailyEnrollmentsChart.destroy();
+
+                // Gráfico de Inscripciones por Ciclo
+                if (chartData.enrollments_by_cycle && chartData.enrollments_by_cycle.length > 0) {
+                    const ctx1 = document.getElementById('enrollmentsByCycleChart').getContext('2d');
+                    enrollmentsByCycleChart = new Chart(ctx1, {
+                        type: 'doughnut',
+                        data: {
+                            labels: chartData.enrollments_by_cycle.map(item => item.cycle__name || 'Sin ciclo'),
+                            datasets: [{
+                                data: chartData.enrollments_by_cycle.map(item => item.count),
+                                backgroundColor: [
+                                    '#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1',
+                                    '#20c997', '#fd7e14', '#e83e8c', '#6c757d', '#17a2b8'
+                                ],
+                                borderWidth: 2,
+                                borderColor: '#fff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                },
+                                datalabels: {
+                                    display: true,
+                                    color: 'white',
+                                    font: {
+                                        weight: 'bold',
+                                        size: 12
+                                    },
+                                    formatter: function (value) {
+                                        return value;
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Gráfico de Inscripciones por Sede
+                if (chartData.enrollments_by_subsidiary && chartData.enrollments_by_subsidiary.length > 0) {
+                    const ctx2 = document.getElementById('enrollmentsBySubsidiaryChart').getContext('2d');
+                    enrollmentsBySubsidiaryChart = new Chart(ctx2, {
+                        type: 'bar',
+                        data: {
+                            labels: chartData.enrollments_by_subsidiary.map(item => item.subsidiary__name || 'Sin sede'),
+                            datasets: [{
+                                label: 'Inscripciones',
+                                data: chartData.enrollments_by_subsidiary.map(item => item.count),
+                                backgroundColor: 'rgba(0, 123, 255, 0.8)',
+                                borderColor: 'rgba(0, 123, 255, 1)',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                datalabels: {
+                                    anchor: 'end',
+                                    align: 'top',
+                                    formatter: function (value) {
+                                        return value;
+                                    },
+                                    font: {
+                                        weight: 'bold',
+                                        size: 12
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Gráfico de Inscripciones por Horario
+                if (chartData.enrollments_by_schedule && chartData.enrollments_by_schedule.length > 0) {
+                    const ctx3 = document.getElementById('enrollmentsByScheduleChart').getContext('2d');
+                    enrollmentsByScheduleChart = new Chart(ctx3, {
+                        type: 'bar',
+                        data: {
+                            labels: chartData.enrollments_by_schedule.map(item => item.schedule__name || 'Sin horario'),
+                            datasets: [{
+                                label: 'Inscripciones',
+                                data: chartData.enrollments_by_schedule.map(item => item.count),
+                                backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                                borderColor: 'rgba(40, 167, 69, 1)',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                datalabels: {
+                                    anchor: 'end',
+                                    align: 'top',
+                                    formatter: function (value) {
+                                        return value;
+                                    },
+                                    font: {
+                                        weight: 'bold',
+                                        size: 12
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Gráfico de Inscripciones por Profesor
+                if (chartData.enrollments_by_teacher && chartData.enrollments_by_teacher.length > 0) {
+                    const ctx4 = document.getElementById('enrollmentsByTeacherChart').getContext('2d');
+                    enrollmentsByTeacherChart = new Chart(ctx4, {
+                        type: 'bar',
+                        data: {
+                            labels: chartData.enrollments_by_teacher.map(item => item.label || 'Sin profesor'),
+                            datasets: [{
+                                label: 'Alumnos',
+                                data: chartData.enrollments_by_teacher.map(item => item.count),
+                                backgroundColor: 'rgba(255, 193, 7, 0.8)',
+                                borderColor: 'rgba(255, 193, 7, 1)',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                datalabels: {
+                                    anchor: 'end',
+                                    align: 'top',
+                                    formatter: function (value) {
+                                        return value;
+                                    },
+                                    font: {
+                                        weight: 'bold',
+                                        size: 12
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Gráfico de Inscripciones por Turno
+                if (chartData.enrollments_by_timeslot && chartData.enrollments_by_timeslot.length > 0) {
+                    const ctx5 = document.getElementById('enrollmentsByTimeslotChart').getContext('2d');
+                    enrollmentsByTimeslotChart = new Chart(ctx5, {
+                        type: 'bar',
+                        data: {
+                            labels: chartData.enrollments_by_timeslot.map(item => item.label || 'Sin turno'),
+                            datasets: [{
+                                label: 'Inscripciones',
+                                data: chartData.enrollments_by_timeslot.map(item => item.count),
+                                backgroundColor: 'rgba(23, 162, 184, 0.8)',
+                                borderColor: 'rgba(23, 162, 184, 1)',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            plugins: {
+                                datalabels: {
+                                    anchor: 'end',
+                                    align: 'right',
+                                    formatter: function (value) {
+                                        return value;
+                                    },
+                                    font: {
+                                        weight: 'bold',
+                                        size: 12
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Gráfico de Inscripciones por Día
+                if (chartData.daily_enrollments && chartData.daily_enrollments.length > 0) {
+                    const ctx6 = document.getElementById('dailyEnrollmentsChart').getContext('2d');
+                    dailyEnrollmentsChart = new Chart(ctx6, {
+                        type: 'line',
+                        data: {
+                            labels: chartData.daily_enrollments.map(item => {
+                                const date = new Date(item.day);
+                                return date.toLocaleDateString('es-ES', {day: '2-digit', month: '2-digit'});
+                            }),
+                            datasets: [{
+                                label: 'Inscripciones',
+                                data: chartData.daily_enrollments.map(item => item.count),
+                                borderColor: 'rgba(0, 123, 255, 1)',
+                                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: 'rgba(0, 123, 255, 1)',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2,
+                                pointRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                datalabels: {
+                                    anchor: 'end',
+                                    align: 'top',
+                                    formatter: function (value) {
+                                        return value;
+                                    },
+                                    font: {
+                                        weight: 'bold',
+                                        size: 12
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            function updateSummary(stats) {
+                $('#summary-completed-count').text(stats.total_enrollments || 0);
+                $('#summary-completed-total').text('S/ ' + parseFloat(stats.income_from_enrollments || 0).toFixed(2));
+                $('#summary-pending-count').text(stats.pending_enrollments || 0);
+                $('#summary-pending-balance').text('S/ ' + parseFloat(stats.total_pending || 0).toFixed(2));
+                $('#summary-delivery-count').text(stats.active_enrollments || 0);
+                $('#summary-income-current').text('S/ ' + parseFloat(stats.income_from_enrollments || 0).toFixed(2));
+                $('#summary-income-previous').text('S/ 0.00');
+                $('#summary-income-total').text('S/ ' + parseFloat(stats.monthly_income_total || 0).toFixed(2));
+                $('#summary-expenses-total').text('S/ ' + parseFloat(stats.monthly_expenses_total || 0).toFixed(2));
+                $('#summary-profit-total').text('S/ ' + parseFloat(stats.monthly_profit_total || 0).toFixed(2));
+            }
+
+            function updateHeader(monthName, subsidiaryName) {
+                $('#current-month').text(monthName);
+                $('#subsidiary-name').text(subsidiaryName);
+            }
+
+            function showError(message) {
+                const errorDiv = $(`
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                ${message}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        `);
+                $('.container-fluid').prepend(errorDiv);
+                setTimeout(() => errorDiv.fadeOut(), 5000);
+            }
+        });
+    </script>
+{% endblock %}

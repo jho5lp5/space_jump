@@ -1,0 +1,249 @@
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header bg-gradient-warning text-white">
+            <h5 class="modal-title" style="font-size: 0.95rem;"><i class="fas fa-edit mr-2"></i>Editar Inscripción</h5>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <form id="form-enrollment-update">
+            <input type="hidden" name="enrollment_id" value="{{ enrollment_obj.id }}">
+            <div class="modal-body" style="font-size: 0.875rem;">
+                <!-- Info del deportista -->
+                <div class="alert alert-info">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-graduate fa-2x mr-3"></i>
+                        <div>
+                            <strong>{{ enrollment_obj.student.full_name }}</strong>
+                            <br><small>DNI: {{ enrollment_obj.student.document_number }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-sync-alt mr-1"></i>Ciclo *</label>
+                            <select class="form-control rounded-pill" name="cycle_id" id="cycle_select_upd" required style="font-size: 0.875rem;">
+                                {% for cycle in cycles %}
+                                    <option value="{{ cycle.id }}"
+                                            {% if cycle.id == enrollment_obj.cycle.id %}selected{% endif %}>
+                                        {{ cycle.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-week mr-1"></i>Horario *</label>
+                            <select class="form-control rounded-pill" name="schedule_id" id="schedule_select_upd" required style="font-size: 0.875rem;">
+                                {% for schedule in enrollment_obj.cycle.schedules.all %}
+                                    <option value="{{ schedule.id }}"
+                                            {% if schedule.id == enrollment_obj.schedule.id %}selected{% endif %}>
+                                        {{ schedule.name }} - S/{{ schedule.price }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-clock mr-1"></i>Turno *</label>
+                            <select class="form-control rounded-pill" name="timeslot_id" id="timeslot_select_upd" required style="font-size: 0.875rem;">
+                                {% for slot in enrollment_obj.schedule.time_slots.all %}
+                                    <option value="{{ slot.id }}"
+                                            {% if slot.id == enrollment_obj.time_slot.id %}selected{% endif %}>
+                                        {{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}
+                                        ({{ slot.age_description|default:"Todas las edades" }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar mr-1"></i>Fecha de Inscripción</label>
+                            <input type="date" class="form-control rounded-pill" name="enrollment_date"
+                                   value="{{ enrollment_obj.enrollment_date|date:'Y-m-d' }}" style="font-size: 0.875rem;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label><i class="fas fa-dollar-sign mr-1"></i>Precio Total *</label>
+                            <input type="text" class="form-control rounded-pill" name="price" id="price_input_upd"
+                                   aria-label="" value="{{ enrollment_obj.price|safe }}" required style="font-size: 0.875rem;">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label><i class="fas fa-money-bill-wave mr-1"></i>Adelanto *</label>
+                            <input type="text" class="form-control rounded-pill" name="advance" id="advance_input_upd"
+                                    aria-label="" value="{{ enrollment_obj.advance|default:0 }}" required style="font-size: 0.875rem;">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label><i class="fas fa-exclamation-circle mr-1"></i>Faltante</label>
+                            <input type="text" class="form-control rounded-pill" id="remaining_input_upd"
+                                    aria-label="" value="{{ enrollment_obj.remaining|default:0 }}" readonly
+                                   style="background-color: #fff3cd; font-weight: bold; font-size: 0.875rem;">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label><i class="fas fa-credit-card mr-1"></i>Método de Pago</label>
+                            <select class="form-control rounded-pill" name="payment_method" style="font-size: 0.875rem;">
+                                <option value="E" {% if enrollment_obj.payment_method == 'E' %}selected{% endif %}>
+                                    Efectivo
+                                </option>
+                                <option value="Y" {% if enrollment_obj.payment_method == 'Y' %}selected{% endif %}>
+                                    Yape
+                                </option>
+                                <option value="D" {% if enrollment_obj.payment_method == 'D' %}selected{% endif %}>
+                                    Depósito/Transferencia
+                                </option>
+                                <option value="C" {% if enrollment_obj.payment_method == 'C' %}selected{% endif %}>
+                                    Crédito
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label><i class="fas fa-toggle-on mr-1"></i>Estado</label>
+                            <select class="form-control rounded-pill" name="status" style="font-size: 0.875rem;">
+                                <option value="A" {% if enrollment_obj.status == 'A' %}selected{% endif %}>Activo
+                                </option>
+                                <option value="V" {% if enrollment_obj.status == 'V' %}selected{% endif %}>Vencido
+                                </option>
+                                <option value="C" {% if enrollment_obj.status == 'C' %}selected{% endif %}>Cancelado
+                                </option>
+                                <option value="P" {% if enrollment_obj.status == 'P' %}selected{% endif %}>Pendiente
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label><i class="fas fa-building mr-1"></i>Sede</label>
+                            <select class="form-control rounded-pill" name="subsidiary_id" style="font-size: 0.875rem;">
+                                <option value="">Sin sede</option>
+                                {% for sub in subsidiaries %}
+                                    <option value="{{ sub.id }}"
+                                            {% if enrollment_obj.subsidiary.id == sub.id %}selected{% endif %}>
+                                        {{ sub.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-sticky-note mr-1"></i>Observaciones</label>
+                    <textarea class="form-control rounded" name="observations"
+                              rows="2" style="font-size: 0.875rem;">{{ enrollment_obj.observations }}</textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary rounded-pill" data-dismiss="modal" style="font-size: 0.875rem;">Cancelar</button>
+                <button type="submit" class="btn btn-warning rounded-pill" style="font-size: 0.875rem;">
+                    <i class="fas fa-save mr-1"></i>Actualizar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Cargar horarios al cambiar ciclo
+    $('#cycle_select_upd').on('change', function () {
+        var cycleId = $(this).val();
+        if (cycleId) {
+            $.get('{% url "apps.students:get_schedules_by_cycle" %}', {cycle_id: cycleId}, function (data) {
+                var options = '<option value="">Seleccionar...</option>';
+                data.schedules.forEach(function (s) {
+                    options += '<option value="' + s.id + '">' + s.name + ' - S/' + s.price + '</option>';
+                });
+                $('#schedule_select_upd').html(options);
+                $('#timeslot_select_upd').html('<option value="">Seleccione horario primero</option>');
+            });
+        }
+    });
+
+    // Cargar turnos al cambiar horario
+    $('#schedule_select_upd').on('change', function () {
+        var scheduleId = $(this).val();
+        if (scheduleId) {
+            $.get('{% url "apps.students:get_timeslots_by_schedule" %}', {schedule_id: scheduleId}, function (data) {
+                var options = '<option value="">Seleccionar...</option>';
+                data.timeslots.forEach(function (t) {
+                    options += '<option value="' + t.id + '">' + t.display + '</option>';
+                });
+                $('#timeslot_select_upd').html(options);
+            });
+        }
+    });
+
+    // Calcular faltante cuando cambia precio o adelanto
+    function calculateRemainingUpd() {
+        var price = parseFloat($('#price_input_upd').val()) || 0;
+        var advance = parseFloat($('#advance_input_upd').val()) || 0;
+        var remaining = Math.max(0, price - advance);
+        $('#remaining_input_upd').val(remaining.toFixed(2));
+    }
+
+    $('#price_input_upd, #advance_input_upd').on('input', calculateRemainingUpd);
+
+    // Calcular al cargar
+    $(document).ready(function () {
+        calculateRemainingUpd();
+    });
+
+    $('#form-enrollment-update').on('submit', function (e) {
+        e.preventDefault();
+
+        // Calcular faltante antes de enviar
+        var price = parseFloat($('#price_input_upd').val()) || 0;
+        var advance = parseFloat($('#advance_input_upd').val()) || 0;
+        var remaining = Math.max(0, price - advance);
+
+        // Agregar faltante al formulario
+        if (!$('input[name="remaining"]').length) {
+            $('<input>').attr({
+                type: 'hidden',
+                name: 'remaining',
+                value: remaining.toFixed(2)
+            }).appendTo(this);
+        } else {
+            $('input[name="remaining"]').val(remaining.toFixed(2));
+        }
+
+        $.ajax({
+            url: '{% url "apps.students:update_enrollment" %}',
+            type: 'POST',
+            data: $(this).serialize(),
+            success: function (response) {
+                if (response.success) {
+                    toastr.success(response.message);
+                    $('#modal_enrollment_update').modal('hide');
+                    location.reload();
+                } else {
+                    toastr.error(response.message);
+                }
+            },
+            error: function () {
+                toastr.error('Error al actualizar');
+            }
+        });
+    });
+</script>
+

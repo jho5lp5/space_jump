@@ -1,0 +1,325 @@
+{% extends 'home.html' %}
+{% load static %}
+{% block title %}Inscripciones{% endblock title %}
+
+{% block body %}
+    <div class="content-header">
+        <div class="container-fluid roboto-condensed-regular">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="m-0 text-dark">
+                                <i class="fas fa-user-plus mr-2"></i>Inscripciones
+                            </h1>
+                            <p class="text-muted mb-0">Gestiona las inscripciones de deportistas</p>
+                        </div>
+                        <button type="button" onclick="showEnrollmentCreateModal()"
+                                class="btn btn-primary rounded-pill shadow">
+                            <i class="fas fa-plus mr-1"></i>Nueva Inscripción
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card shadow-sm mb-4 border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body py-4">
+                    <h6 class="text-white mb-3 font-weight-bold">
+                        <i class="fas fa-filter mr-2"></i>Filtros de Búsqueda
+                    </h6>
+                    
+                    <!-- Primera fila: Búsqueda por deportista -->
+                    <div class="row mb-3">
+                        <div class="col-lg-6 col-md-8 col-sm-12">
+                            <label class="text-white small font-weight-bold mb-1 d-block">
+                                <i class="fas fa-user mr-1"></i>Buscar Deportista
+                            </label>
+                            <input type="text" class="form-control rounded-pill shadow-sm" id="search-enrollment"
+                                   placeholder="Nombre, apellido o DNI del deportista..." style="font-size: 0.875rem;">
+                        </div>
+                    </div>
+                    
+                    <!-- Segunda fila: Resto de filtros -->
+                    <div class="row">
+                        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <label class="text-white small font-weight-bold mb-1 d-block">
+                                <i class="fas fa-sync-alt mr-1"></i>Ciclo
+                            </label>
+                            <select class="form-control rounded-pill shadow-sm" id="filter-cycle" style="font-size: 0.875rem;">
+                                <option value="">Todos los ciclos</option>
+                                {% for cycle in cycles %}
+                                    <option value="{{ cycle.id }}">{{ cycle.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <label class="text-white small font-weight-bold mb-1 d-block">
+                                <i class="fas fa-calendar-week mr-1"></i>Horario
+                            </label>
+                            <select class="form-control rounded-pill shadow-sm" id="filter-schedule" style="font-size: 0.875rem;">
+                                <option value="">Todos los horarios</option>
+                            </select>
+                        </div>
+                        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <label class="text-white small font-weight-bold mb-1 d-block">
+                                <i class="fas fa-clock mr-1"></i>Turno
+                            </label>
+                            <select class="form-control rounded-pill shadow-sm" id="filter-timeslot" style="font-size: 0.875rem;">
+                                <option value="">Todos los turnos</option>
+                            </select>
+                        </div>
+                        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <label class="text-white small font-weight-bold mb-1 d-block">
+                                <i class="fas fa-chalkboard-teacher mr-1"></i>Profesor
+                            </label>
+                            <select class="form-control rounded-pill shadow-sm" id="filter-teacher" style="font-size: 0.875rem;">
+                                <option value="">Todos los profesores</option>
+                                {% for teacher in teachers %}
+                                    <option value="{{ teacher.id }}">{{ teacher.get_full_name|default:teacher.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
+                            <label class="text-white small font-weight-bold mb-1 d-block">
+                                <i class="fas fa-building mr-1"></i>Sede
+                            </label>
+                            <select class="form-control rounded-pill shadow-sm" id="filter-subsidiary" style="font-size: 0.875rem;">
+                                <option value="">Todas</option>
+                                {% for sub in subsidiaries %}
+                                    <option value="{{ sub.id }}">{{ sub.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de inscripciones -->
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="enrollments-table">
+                            <thead class="thead-light">
+                            <tr>
+                                <th>Deportista</th>
+                                <th>Ciclo</th>
+                                <th>Horario</th>
+                                <th>Turno</th>
+                                <th>Fecha Inscripción</th>
+                                <th>Sede</th>
+                                <th>Profesor</th>
+                                <th class="text-right">Total</th>
+                                <th class="text-right">Adelanto</th>
+                                <th class="text-right">Faltante</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for enrollment in enrollments %}
+                                <tr data-cycle="{{ enrollment.cycle.id }}"
+                                    data-status="{{ enrollment.status }}"
+                                    data-subsidiary="{% if enrollment.subsidiary %}{{ enrollment.subsidiary.id }}{% else %}0{% endif %}"
+                                    data-schedule="{{ enrollment.schedule.id }}"
+                                    data-timeslot="{{ enrollment.time_slot.id }}"
+                                    data-teacher="{% if enrollment.time_slot.teacher %}{{ enrollment.time_slot.teacher.id }}{% else %}0{% endif %}">
+                                    <td>
+                                        <strong>{{ enrollment.student.full_name }}</strong>
+                                        <br><small class="text-muted">{{ enrollment.student.document_number }}</small>
+                                    </td>
+                                    <td>{{ enrollment.cycle.name }}</td>
+                                    <td>
+                                        <span class="badge badge-info">{{ enrollment.schedule.name }}</span>
+                                        <br><small>{{ enrollment.schedule.get_weekdays_display }}</small>
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-clock text-primary"></i>
+                                        {{ enrollment.time_slot.start_time|time:"H:i" }}
+                                        - {{ enrollment.time_slot.end_time|time:"H:i" }}
+                                        {% if enrollment.time_slot.age_description %}
+                                            <br><small class="text-muted">{{ enrollment.time_slot.age_description }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ enrollment.enrollment_date|date:"d/m/Y" }}</td>
+                                    <td>
+                                        {% if enrollment.subsidiary %}
+                                            <span class="badge badge-secondary">{{ enrollment.subsidiary.name }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if enrollment.time_slot.teacher %}
+                                            <span class="badge badge-success">
+                                                <i class="fas fa-chalkboard-teacher mr-1"></i>
+                                                {{ enrollment.time_slot.teacher.get_full_name|default:enrollment.time_slot.teacher.username }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-right">
+                                        <strong class="text-primary">S/ {{ enrollment.price|floatformat:2 }}</strong>
+                                    </td>
+                                    <td class="text-right">
+                                        <span class="text-success font-weight-bold">S/ {{ enrollment.advance|default:0|floatformat:2 }}</span>
+                                    </td>
+                                    <td class="text-right">
+                                        {% if enrollment.remaining|default:0 > 0 %}
+                                            <span class="text-danger font-weight-bold">S/ {{ enrollment.remaining|floatformat:2 }}</span>
+                                        {% else %}
+                                            <span class="text-success font-weight-bold">S/ 0.00</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if enrollment.status == 'A' %}
+                                            <span class="badge badge-success">Activo</span>
+                                        {% elif enrollment.status == 'V' %}
+                                            <span class="badge badge-danger">Vencido</span>
+                                        {% elif enrollment.status == 'C' %}
+                                            <span class="badge badge-secondary">Cancelado</span>
+                                        {% else %}
+                                            <span class="badge badge-warning">Pendiente</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-warning rounded-pill mr-1"
+                                                    onclick="updateEnrollment({{ enrollment.id }})" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <a href="{% url 'apps.students:download_enrollment_receipt_pdf' enrollment.id %}" 
+                                               class="btn btn-sm btn-info rounded-pill mr-1"
+                                               title="Descargar Recibo PDF" target="_blank">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </a>
+                                            {% if enrollment.remaining|default:0 > 0 %}
+                                                <button class="btn btn-sm btn-success rounded-pill"
+                                                        onclick="showCompletePaymentModal({{ enrollment.id }})" 
+                                                        title="Completar Pago">
+                                                    <i class="fas fa-money-bill-wave"></i>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="12" class="text-center py-4">
+                                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No hay inscripciones registradas</p>
+                                        <button class="btn btn-primary rounded-pill" onclick="showEnrollmentCreateModal()">
+                                            <i class="fas fa-plus mr-1"></i>Crear primera inscripción
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modales -->
+    <div class="modal fade" id="modal_enrollment_create" tabindex="-1">
+        <div id="modal-enrollment-create-content"></div>
+    </div>
+    <div class="modal fade" id="modal_enrollment_update" tabindex="-1">
+        <div id="modal-enrollment-update-content"></div>
+    </div>
+    <div class="modal fade" id="modal_complete_payment" tabindex="-1">
+        <div id="modal-complete-payment-content"></div>
+    </div>
+
+{% endblock body %}
+{% block extrajs %}
+    <script type="text/javascript">
+        function showEnrollmentCreateModal() {
+            $.get('{% url "apps.students:modal_enrollment_create" %}', function (response) {
+                $('#modal-enrollment-create-content').html(response.form);
+                $('#modal_enrollment_create').modal('show');
+            });
+        }
+
+        function updateEnrollment(pk) {
+            $.get('{% url "apps.students:modal_enrollment_update" %}', {pk: pk}, function (response) {
+                $('#modal-enrollment-update-content').html(response.form);
+                $('#modal_enrollment_update').modal('show');
+            });
+        }
+
+        function showCompletePaymentModal(enrollmentId) {
+            $.get('{% url "apps.students:modal_complete_payment" %}', {pk: enrollmentId}, function (response) {
+                $('#modal-complete-payment-content').html(response.form);
+                $('#modal_complete_payment').modal('show');
+            });
+        }
+
+        // Cargar horarios cuando cambia el ciclo
+        $('#filter-cycle').on('change', function() {
+            var cycleId = $(this).val();
+            var scheduleSelect = $('#filter-schedule');
+            var timeslotSelect = $('#filter-timeslot');
+            
+            scheduleSelect.html('<option value="">Todos los horarios</option>');
+            timeslotSelect.html('<option value="">Todos los turnos</option>');
+            
+            if (cycleId) {
+                $.get('{% url "apps.students:get_schedules_by_cycle" %}', {cycle_id: cycleId}, function(data) {
+                    data.schedules.forEach(function(s) {
+                        scheduleSelect.append('<option value="' + s.id + '">' + s.name + '</option>');
+                    });
+                });
+            }
+        });
+
+        // Cargar turnos cuando cambia el horario
+        $('#filter-schedule').on('change', function() {
+            var scheduleId = $(this).val();
+            var timeslotSelect = $('#filter-timeslot');
+            
+            timeslotSelect.html('<option value="">Todos los turnos</option>');
+            
+            if (scheduleId) {
+                $.get('{% url "apps.students:get_timeslots_by_schedule" %}', {schedule_id: scheduleId}, function(data) {
+                    data.timeslots.forEach(function(t) {
+                        timeslotSelect.append('<option value="' + t.id + '">' + t.display + '</option>');
+                    });
+                });
+            }
+        });
+
+        // Filtros
+        $(document).ready(function () {
+            function filterTable() {
+                var search = $('#search-enrollment').val().toLowerCase();
+                var cycle = $('#filter-cycle').val();
+                var schedule = $('#filter-schedule').val();
+                var timeslot = $('#filter-timeslot').val();
+                var subsidiary = $('#filter-subsidiary').val();
+                var teacher = $('#filter-teacher').val();
+
+                $('#enrollments-table tbody tr').each(function () {
+                    var row = $(this);
+                    var text = row.text().toLowerCase();
+                    var show = true;
+
+                    if (search && text.indexOf(search) === -1) show = false;
+                    if (cycle && row.data('cycle') != cycle) show = false;
+                    if (schedule && row.data('schedule') != schedule) show = false;
+                    if (timeslot && row.data('timeslot') != timeslot) show = false;
+                    if (subsidiary && row.data('subsidiary') != subsidiary) show = false;
+                    if (teacher && row.data('teacher') != teacher) show = false;
+
+                    row.toggle(show);
+                });
+            }
+
+            $('#search-enrollment, #filter-cycle, #filter-schedule, #filter-timeslot, #filter-subsidiary, #filter-teacher').on('input change', filterTable);
+        });
+    </script>
+{% endblock extrajs %}
+

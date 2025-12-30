@@ -1,0 +1,166 @@
+{% extends 'home.html' %}
+{% load static %}
+{% block title %}
+    Gestión de Deportistas
+{% endblock title %}
+
+{% block body %}
+    <style>
+        .btn {
+            border-radius: 25px;
+        }
+
+        .btn-sm {
+            border-radius: 20px;
+        }
+    </style>
+    <div class="content-header">
+        <div class="container-fluid roboto-condensed-regular">
+            <!-- Header con estadísticas -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="m-0 text-dark">
+                                <i class="fas fa-user-graduate mr-2"></i>Gestión de Deportistas
+                            </h1>
+                            <p class="text-muted mb-0">Administra la información de los deportistas de la academia</p>
+                        </div>
+                        <div class="d-flex">
+                            <button type="button" class="btn btn-info" id="btn-list-student">
+                                <i class="fas fa-list mr-1"></i>Lista de Deportistas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta de lista de deportistas -->
+            <div class="card list-student shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 text-primary">
+                            <i class="fas fa-user-graduate mr-2"></i>Deportistas Registrados
+                        </h5>
+                        <button type="button" onclick="showModalView('modal_student_create')"
+                                class="btn btn-primary">
+                            <i class="fas fa-plus mr-1"></i>Nuevo Deportista
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="student-grid-list">
+                        {% include "students/student_grid_list.html" %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para crear deportista -->
+    <div class="modal fade" id="modal_student_create" data-backdrop="static" data-keyboard="false" tabindex="-1"
+         role="dialog"
+         aria-labelledby="ModalHelpTitle"
+         aria-hidden="true">
+        <div id="modal-student-create-content"></div>
+    </div>
+
+    <!-- Modal para actualizar deportista -->
+    <div class="modal fade" id="modal_student_update" tabindex="-1" role="dialog"
+         aria-labelledby="modal_student_updateLabel" aria-hidden="true">
+        <div id="modal-student-update-content"></div>
+    </div>
+
+{% endblock body %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+
+        function showModalView(route) {
+            $.ajax({
+                url: '/students/' + route + '/',
+                dataType: 'json',
+                type: 'GET',
+                data: {'pk': 1},
+                success: function (response) {
+                    $('#modal_student_create').html(response.form);
+                    $('#modal_student_create').modal('show');
+                },
+                fail: function (response) {
+                    toastr.error('Error en la petición', '¡Mensaje!');
+                }
+            });
+        }
+
+
+        function updateStudent(pk) {
+            $.ajax({
+                url: '{% url "apps.students:modal_student_update" %}',
+                type: 'GET',
+                data: {'pk': pk},
+                success: function (response) {
+                    $('#modal-student-update-content').html(response.form);
+                    $('#modal_student_update').modal('show');
+                },
+                error: function () {
+                    alert('Error al cargar el formulario de actualización');
+                }
+            });
+        }
+
+        function downloadStudentPDF(studentId) {
+            // Crear un enlace temporal para descargar el PDF
+            const url = '{% url "apps.students:download_student_enrollment_pdf" 0 %}'.replace('0', studentId);
+
+            // Crear un elemento <a> temporal y hacer clic en él
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = '';
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Mostrar notificación de éxito
+            if (typeof toastr !== 'undefined') {
+                toastr.success('Descargando ficha de inscripción...', 'Éxito');
+            }
+        }
+
+
+        // Búsqueda en tiempo real
+        $('#search-student').on('keyup', function () {
+            var value = $(this).val().toLowerCase();
+            $('#students-table tbody tr').filter(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+            });
+        });
+
+        // Filtro por sede
+        $('#filter-subsidiary').on('change', function () {
+            var value = $(this).val().toLowerCase();
+            $('#students-table tbody tr').each(function () {
+                if (!value) {
+                    $(this).show();
+                } else {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                }
+            });
+        });
+
+        // Filtro por estado
+        $('#filter-status').on('change', function () {
+            var value = $(this).val();
+            $('#students-table tbody tr').each(function () {
+                if (!value) {
+                    $(this).show();
+                } else {
+                    $(this).toggle($(this).data('status') === value);
+                }
+            });
+        });
+
+    </script>
+{% endblock extrajs %}
+
+

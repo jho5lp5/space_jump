@@ -1,0 +1,164 @@
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header bg-gradient-success text-white">
+            <h5 class="modal-title" style="font-size: 0.95rem;"><i class="fas fa-money-bill-wave mr-2"></i>Completar Pago</h5>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <form id="form-complete-payment">
+            <input type="hidden" name="enrollment_id" value="{{ enrollment_obj.id }}">
+            <div class="modal-body" style="font-size: 0.875rem;">
+                <!-- Info del deportista -->
+                <div class="alert alert-info">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-graduate fa-2x mr-3"></i>
+                        <div>
+                            <strong>{{ enrollment_obj.student.full_name }}</strong>
+                            <br><small>DNI: {{ enrollment_obj.student.document_number }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-dollar-sign mr-1"></i>Precio Total</label>
+                            <input type="text" class="form-control rounded-pill" 
+                                   value="S/ {{ enrollment_obj.price|floatformat:2 }}" readonly
+                                   style="background-color: #f8f9fa; font-weight: bold; font-size: 0.875rem;">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-money-bill-wave mr-1"></i>Adelanto Pagado</label>
+                            <input type="text" class="form-control rounded-pill" 
+                                   value="S/ {{ enrollment_obj.advance|default:0|floatformat:2 }}" readonly
+                                   style="background-color: #f8f9fa; font-weight: bold; font-size: 0.875rem;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-exclamation-circle mr-1"></i>Faltante Actual</label>
+                            <input type="text" class="form-control rounded-pill" 
+                                   value="S/ {{ enrollment_obj.remaining|default:0|floatformat:2 }}" readonly
+                                   style="background-color: #fff3cd; font-weight: bold; font-size: 0.875rem;">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-money-check-alt mr-1"></i>Monto a Pagar *</label>
+                            <input type="number" class="form-control rounded-pill" name="payment_amount" 
+                                   id="payment_amount" step="0.01" min="0.01" 
+                                   max="{{ enrollment_obj.remaining|default:0 }}" required
+                                   value="{{ enrollment_obj.remaining|default:0 }}" style="font-size: 0.875rem;">
+                            <small class="text-muted">Máximo: S/ {{ enrollment_obj.remaining|default:0|floatformat:2 }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-credit-card mr-1"></i>Método de Pago *</label>
+                            <select class="form-control rounded-pill" name="payment_method" required style="font-size: 0.875rem;">
+                                <option value="E">Efectivo</option>
+                                <option value="Y">Yape</option>
+                                <option value="D">Depósito/Transferencia</option>
+                                <option value="C">Crédito</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-calculator mr-1"></i>Nuevo Faltante</label>
+                            <input type="text" class="form-control rounded-pill" id="new_remaining" 
+                                   readonly style="background-color: #fff3cd; font-weight: bold; font-size: 0.875rem;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar mr-1"></i>Fecha de Pago Completado *</label>
+                            <input type="date" class="form-control rounded-pill" name="payment_completed_date" 
+                                   value="{% now 'Y-m-d' %}" required style="font-size: 0.875rem;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-sticky-note mr-1"></i>Observaciones</label>
+                    <textarea class="form-control rounded" name="observations" rows="2" 
+                              placeholder="Observaciones sobre el pago..." style="font-size: 0.875rem;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary rounded-pill" data-dismiss="modal" style="font-size: 0.875rem;">Cancelar</button>
+                <button type="submit" class="btn btn-success rounded-pill" style="font-size: 0.875rem;">
+                    <i class="fas fa-check mr-1"></i>Completar Pago
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    var maxAmount = parseFloat('{{ enrollment_obj.remaining|default:0 }}');
+    
+    // Calcular nuevo faltante cuando cambia el monto
+    $('#payment_amount').on('input', function() {
+        var paymentAmount = parseFloat($(this).val()) || 0;
+        if (paymentAmount > maxAmount) {
+            $(this).val(maxAmount.toFixed(2));
+            paymentAmount = maxAmount;
+        }
+        var newRemaining = Math.max(0, maxAmount - paymentAmount);
+        $('#new_remaining').val('S/ ' + newRemaining.toFixed(2));
+    });
+    
+    // Calcular al cargar
+    var initialPayment = parseFloat($('#payment_amount').val()) || 0;
+    var initialRemaining = Math.max(0, maxAmount - initialPayment);
+    $('#new_remaining').val('S/ ' + initialRemaining.toFixed(2));
+});
+
+$('#form-complete-payment').on('submit', function(e) {
+    e.preventDefault();
+    
+    var paymentAmount = parseFloat($('#payment_amount').val()) || 0;
+    var maxAmount = parseFloat('{{ enrollment_obj.remaining|default:0 }}');
+    
+    if (paymentAmount <= 0) {
+        toastr.error('El monto a pagar debe ser mayor a 0');
+        return;
+    }
+    
+    if (paymentAmount > maxAmount) {
+        toastr.error('El monto no puede ser mayor al faltante');
+        return;
+    }
+    
+    $.ajax({
+        url: '{% url "apps.students:complete_payment" %}',
+        type: 'POST',
+        data: $(this).serialize(),
+        success: function(response) {
+            if (response.success) {
+                toastr.success(response.message);
+                $('#modal_complete_payment').modal('hide');
+                location.reload();
+            } else {
+                toastr.error(response.message);
+            }
+        },
+        error: function() {
+            toastr.error('Error al completar el pago');
+        }
+    });
+});
+</script>
+

@@ -1,0 +1,366 @@
+{% extends 'home.html' %}
+{% load static %}
+{% block title %}Reportes de Academia - SPACE JUMP{% endblock %}
+
+{% block body %}
+    <div class="container-fluid roboto-condensed-regular">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-lg"
+                     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="card-body text-white py-4">
+                        <h2 class="mb-2">
+                            <i class="fas fa-table mr-3"></i>
+                            Reportes de Academia
+                        </h2>
+                        <p class="mb-0 opacity-90">
+                            Reportes detallados en formato tabla para análisis y exportación
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros y Selección de Reporte -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-filter mr-2"></i>
+                            Seleccionar Reporte
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="font-weight-bold">Tipo de Reporte</label>
+                                <select class="form-control rounded-pill" id="report-type">
+                                    <option value="">Seleccione un reporte</option>
+                                    <option value="enrollments">Reporte de Inscripciones</option>
+                                    <option value="students">Reporte de Deportistas</option>
+                                    <option value="pending">Reporte de Pagos Pendientes</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="font-weight-bold">Mes (solo para Inscripciones)</label>
+                                <input type="month" class="form-control rounded-pill" id="report-month"
+                                       value="{{ current_month }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="font-weight-bold">Sede</label>
+                                <select class="form-control rounded-pill" id="subsidiary">
+                                    <option value="0">Todas las sucursales</option>
+                                    {% for subsidiary in subsidiary_set %}
+                                        <option value="{{ subsidiary.id }}">{{ subsidiary.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="button" class="btn btn-primary btn-lg rounded-pill" onclick="generateReport()">
+                                    <i class="fas fa-search mr-2"></i>
+                                    Generar Reporte
+                                </button>
+                                <button type="button" class="btn btn-success btn-lg rounded-pill ml-2" id="btn-export-excel" style="display: none;" onclick="exportToExcel()">
+                                    <i class="fas fa-file-excel mr-2"></i>
+                                    Exportar a Excel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Resultados -->
+        <div class="row mb-4" id="results-section" style="display: none;">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-gradient-info text-white">
+                        <h5 class="card-title mb-0" id="report-title">
+                            <i class="fas fa-table mr-2"></i>
+                            Resultados del Reporte
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive" id="report-table-container">
+                            <!-- La tabla se generará dinámicamente aquí -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensaje de Carga -->
+        <div class="row" id="loading-section">
+            <div class="col-12 text-center py-5">
+                <div class="card border-0 shadow">
+                    <div class="card-body">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="sr-only">Cargando...</span>
+                        </div>
+                        <h5 class="text-muted">Seleccione un reporte y genere los resultados</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrajs %}
+    <script>
+        // Función para obtener cookie CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        let currentReportType = '';
+        let currentReportData = null;
+
+        function generateReport() {
+            const reportType = $('#report-type').val();
+            const reportMonth = $('#report-month').val();
+            const subsidiary = $('#subsidiary').val();
+
+            if (!reportType) {
+                toastr.error('Debe seleccionar un tipo de reporte');
+                return;
+            }
+
+            if (reportType === 'enrollments' && !reportMonth) {
+                toastr.error('Debe seleccionar un mes para el reporte de inscripciones');
+                return;
+            }
+
+            // Mostrar loading
+            $('#loading-section').show();
+            $('#results-section').hide();
+            $('#btn-export-excel').hide();
+
+            currentReportType = reportType;
+
+            let url = '';
+            const formData = {
+                'csrfmiddlewaretoken': getCookie('csrftoken'),
+                'subsidiary': subsidiary || '0'
+            };
+
+            if (reportType === 'enrollments') {
+                url = '{% url "apps.accounting:get_enrollments_report" %}';
+                formData['report_month'] = reportMonth;
+            } else if (reportType === 'students') {
+                url = '{% url "apps.accounting:get_students_report" %}';
+            } else if (reportType === 'pending') {
+                url = '{% url "apps.accounting:get_pending_payments_report" %}';
+            }
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        currentReportData = response;
+                        displayReport(response, reportType);
+                        $('#loading-section').hide();
+                        $('#results-section').show();
+                        $('#btn-export-excel').show();
+                    } else {
+                        toastr.error('Error: ' + response.message);
+                        $('#loading-section').hide();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    let errorMessage = 'Error al generar el reporte';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    toastr.error(errorMessage);
+                    $('#loading-section').hide();
+                }
+            });
+        }
+
+        function displayReport(data, reportType) {
+            let html = '';
+            let title = '';
+
+            if (reportType === 'enrollments') {
+                title = `Reporte de Inscripciones - ${data.month_name} - ${data.subsidiary}`;
+                html = generateEnrollmentsTable(data);
+            } else if (reportType === 'students') {
+                title = `Reporte de Deportistas Activos - ${data.subsidiary}`;
+                html = generateStudentsTable(data);
+            } else if (reportType === 'pending') {
+                title = `Reporte de Pagos Pendientes - ${data.subsidiary}`;
+                html = generatePendingPaymentsTable(data);
+            }
+
+            $('#report-title').html(`<i class="fas fa-table mr-2"></i>${title}`);
+            $('#report-table-container').html(html);
+        }
+
+        function generateEnrollmentsTable(data) {
+            let html = '<table class="table table-striped table-hover table-bordered">';
+            html += '<thead class="thead-dark"><tr>';
+            html += '<th>N°</th><th>Fecha</th><th>Deportista</th><th>DNI</th><th>Ciclo</th><th>Horario</th>';
+            html += '<th>Turno</th><th>Profesor</th><th>Sede</th><th class="text-right">Total S/.</th>';
+            html += '<th class="text-right">Adelanto S/.</th><th class="text-right">Faltante S/.</th>';
+            html += '</tr></thead><tbody>';
+
+            data.enrollments.forEach(function(item) {
+                html += '<tr>';
+                html += `<td>${item.num}</td>`;
+                html += `<td>${item.date}</td>`;
+                html += `<td>${item.student}</td>`;
+                html += `<td>${item.dni}</td>`;
+                html += `<td>${item.cycle}</td>`;
+                html += `<td>${item.schedule}</td>`;
+                html += `<td>${item.timeslot}</td>`;
+                html += `<td>${item.teacher}</td>`;
+                html += `<td>${item.subsidiary}</td>`;
+                html += `<td class="text-right">S/ ${item.price.toFixed(2)}</td>`;
+                html += `<td class="text-right">S/ ${item.advance.toFixed(2)}</td>`;
+                html += `<td class="text-right font-weight-bold text-danger">S/ ${item.remaining.toFixed(2)}</td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody><tfoot class="thead-light"><tr class="font-weight-bold">';
+            html += `<td colspan="9" class="text-right">TOTALES:</td>`;
+            html += `<td class="text-right">S/ ${data.totals.total_price.toFixed(2)}</td>`;
+            html += `<td class="text-right">S/ ${data.totals.total_advance.toFixed(2)}</td>`;
+            html += `<td class="text-right text-danger">S/ ${data.totals.total_remaining.toFixed(2)}</td>`;
+            html += '</tr></tfoot></table>';
+
+            return html;
+        }
+
+        function generateStudentsTable(data) {
+            let html = '<table class="table table-striped table-hover table-bordered">';
+            html += '<thead class="thead-dark"><tr>';
+            html += '<th>N°</th><th>Nombres y Apellidos</th><th>DNI</th><th>Fecha Nacimiento</th>';
+            html += '<th>Edad</th><th>Teléfono</th><th>Padre/Madre/Apoderado</th>';
+            html += '<th>Teléfono Apoderado</th><th>Sede</th><th>Fecha Registro</th>';
+            html += '</tr></thead><tbody>';
+
+            data.students.forEach(function(item) {
+                html += '<tr>';
+                html += `<td>${item.num}</td>`;
+                html += `<td>${item.full_name}</td>`;
+                html += `<td>${item.dni}</td>`;
+                html += `<td>${item.birth_date}</td>`;
+                html += `<td>${item.age}</td>`;
+                html += `<td>${item.phone}</td>`;
+                html += `<td>${item.parent_name}</td>`;
+                html += `<td>${item.parent_phone}</td>`;
+                html += `<td>${item.subsidiary}</td>`;
+                html += `<td>${item.creation_date}</td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody><tfoot class="thead-light"><tr class="font-weight-bold">';
+            html += `<td colspan="10" class="text-center">TOTAL DE DEPORTISTAS: ${data.total}</td>`;
+            html += '</tr></tfoot></table>';
+
+            return html;
+        }
+
+        function generatePendingPaymentsTable(data) {
+            let html = '<table class="table table-striped table-hover table-bordered">';
+            html += '<thead class="thead-dark"><tr>';
+            html += '<th>N°</th><th>Fecha Inscripción</th><th>Deportista</th><th>DNI</th><th>Ciclo</th>';
+            html += '<th class="text-right">Total S/.</th><th class="text-right">Adelanto S/.</th>';
+            html += '<th class="text-right">Faltante S/.</th><th>Sede</th><th>Días Pendiente</th>';
+            html += '</tr></thead><tbody>';
+
+            data.enrollments.forEach(function(item) {
+                html += '<tr>';
+                html += `<td>${item.num}</td>`;
+                html += `<td>${item.date}</td>`;
+                html += `<td>${item.student}</td>`;
+                html += `<td>${item.dni}</td>`;
+                html += `<td>${item.cycle}</td>`;
+                html += `<td class="text-right">S/ ${item.price.toFixed(2)}</td>`;
+                html += `<td class="text-right">S/ ${item.advance.toFixed(2)}</td>`;
+                html += `<td class="text-right font-weight-bold text-danger">S/ ${item.remaining.toFixed(2)}</td>`;
+                html += `<td>${item.subsidiary}</td>`;
+                const daysClass = item.days_pending > 30 ? 'text-danger' : (item.days_pending > 15 ? 'text-warning' : '');
+                html += `<td class="${daysClass}">${item.days_pending}</td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody><tfoot class="thead-light"><tr class="font-weight-bold">';
+            html += `<td colspan="5" class="text-right">TOTALES:</td>`;
+            html += `<td class="text-right">S/ ${data.totals.total_price.toFixed(2)}</td>`;
+            html += `<td class="text-right">S/ ${data.totals.total_advance.toFixed(2)}</td>`;
+            html += `<td class="text-right text-danger">S/ ${data.totals.total_remaining.toFixed(2)}</td>`;
+            html += `<td colspan="2"></td>`;
+            html += '</tr></tfoot></table>';
+
+            return html;
+        }
+
+        function exportToExcel() {
+            if (!currentReportType || !currentReportData) {
+                toastr.error('No hay datos para exportar');
+                return;
+            }
+
+            const reportMonth = $('#report-month').val();
+            const subsidiary = $('#subsidiary').val();
+
+            let url = '';
+            const formData = {
+                'csrfmiddlewaretoken': getCookie('csrftoken'),
+                'subsidiary': subsidiary || '0'
+            };
+
+            if (currentReportType === 'enrollments') {
+                url = '{% url "apps.accounting:export_enrollments_report_excel" %}';
+                formData['report_month'] = reportMonth;
+            } else if (currentReportType === 'students') {
+                url = '{% url "apps.accounting:export_students_report_excel" %}';
+            } else if (currentReportType === 'pending') {
+                url = '{% url "apps.accounting:export_pending_payments_report_excel" %}';
+            }
+
+            toastr.info('Generando archivo Excel...', 'Por favor espere');
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success('Archivo Excel generado exitosamente');
+                        window.open(response.file_url, '_blank');
+                    } else {
+                        toastr.error('Error: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    let errorMessage = 'Error al generar el archivo Excel';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    toastr.error(errorMessage);
+                }
+            });
+        }
+    </script>
+{% endblock %}
+

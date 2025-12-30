@@ -1,0 +1,71 @@
+{% load static %}
+<div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content border-0 shadow">
+        <div id="modal-loader" class="overlay" style="display: none">
+            <i class="fas fa-3x fa-sync fa-spin text-primary"></i>
+        </div>
+        
+        <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+                <i class="fas fa-plus mr-2"></i>Nuevo Turno
+            </h5>
+            <button type="button" class="close text-white" data-dismiss="modal">
+                <span>&times;</span>
+            </button>
+        </div>
+
+        <form id="form-turn" action="{% url 'apps.sales:save_turn' %}" method="POST">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="name">Nombre del Turno <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name" required autocomplete="off"
+                           placeholder="Ej: Turno 1">
+                </div>
+                <div class="form-group">
+                    <label for="schedule">Horario <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="schedule" name="schedule" required autocomplete="off"
+                           placeholder="Ej: 8 am a 9 am">
+                </div>
+                <div class="form-group">
+                    <label for="age_description">Descripción de Edad</label>
+                    <input type="text" class="form-control" id="age_description" name="age_description" autocomplete="off"
+                           placeholder="Ej: Alumnos de 13 a 15 años">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#form-turn').submit(function(e) {
+            e.preventDefault();
+            $('#modal-loader').show();
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: $(this).serialize(),
+                headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        toastr.error(response.message);
+                    }
+                    $('#modal-loader').hide();
+                },
+                error: function() {
+                    toastr.error('Error al guardar el turno');
+                    $('#modal-loader').hide();
+                }
+            });
+        });
+    });
+</script>
+

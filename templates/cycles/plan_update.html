@@ -1,0 +1,140 @@
+{% load static %}
+<div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content border-0 shadow">
+        <div id="modal-loader" class="overlay" style="display: none">
+            <i class="fas fa-3x fa-sync fa-spin text-warning"></i>
+        </div>
+        
+        <div class="modal-header bg-warning text-white">
+            <h5 class="modal-title">
+                <i class="fas fa-edit mr-2"></i>Actualizar Plan
+            </h5>
+            <button type="button" class="close text-white" data-dismiss="modal">
+                <span>&times;</span>
+            </button>
+        </div>
+
+        <form id="form-plan-update" action="{% url 'apps.sales:update_plan' %}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="plan_id" value="{{ plan_obj.id }}">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="name">Nombre del Plan <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ plan_obj.name }}" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="cycle">Ciclo <span class="text-danger">*</span></label>
+                    <select class="form-control" id="cycle" name="cycle" required autocomplete="off">
+                        <option value="">Seleccione un ciclo...</option>
+                        {% for cycle in cycles %}
+                            <option value="{{ cycle.id }}" {% if plan_obj.cycle and plan_obj.cycle.id == cycle.id %}selected{% endif %}>
+                                {{ cycle.name }} - {{ cycle.duration_months }} mes(es)
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="turn">Turno</label>
+                    <select class="form-control" id="turn" name="turn" autocomplete="off">
+                        <option value="">Seleccione un turno...</option>
+                        {% for turn in turns %}
+                            <option value="{{ turn.id }}" {% if plan_obj.turn and plan_obj.turn.id == turn.id %}selected{% endif %}>
+                                {{ turn.name }} - {{ turn.schedule }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Días de la Semana <span class="text-danger">*</span></label>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="monday" name="monday" value="true" {% if plan_obj.monday %}checked{% endif %}>
+                                <label class="form-check-label" for="monday">Lunes</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="tuesday" name="tuesday" value="true" {% if plan_obj.tuesday %}checked{% endif %}>
+                                <label class="form-check-label" for="tuesday">Martes</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="wednesday" name="wednesday" value="true" {% if plan_obj.wednesday %}checked{% endif %}>
+                                <label class="form-check-label" for="wednesday">Miércoles</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="thursday" name="thursday" value="true" {% if plan_obj.thursday %}checked{% endif %}>
+                                <label class="form-check-label" for="thursday">Jueves</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="friday" name="friday" value="true" {% if plan_obj.friday %}checked{% endif %}>
+                                <label class="form-check-label" for="friday">Viernes</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="saturday" name="saturday" value="true" {% if plan_obj.saturday %}checked{% endif %}>
+                                <label class="form-check-label" for="saturday">Sábado</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="price">Precio (S/) <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" class="form-control" id="price" name="price" value="{{ plan_obj.price }}" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="description">Descripción</label>
+                    <textarea class="form-control" id="description" name="description" rows="3" autocomplete="off">{{ plan_obj.description|default_if_none:'' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="true" {% if plan_obj.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="is_active">
+                            Activo
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-warning">Actualizar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#form-plan-update').submit(function(e) {
+            e.preventDefault();
+            $('#modal-loader').show();
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: $(this).serialize(),
+                headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        toastr.error(response.message);
+                    }
+                    $('#modal-loader').hide();
+                },
+                error: function() {
+                    toastr.error('Error al actualizar el plan');
+                    $('#modal-loader').hide();
+                }
+            });
+        });
+    });
+</script>
+

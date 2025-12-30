@@ -1,0 +1,77 @@
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header bg-gradient-primary text-white">
+            <h5 class="modal-title"><i class="fas fa-plus-circle mr-2"></i>Nuevo Ciclo</h5>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <form id="form-cycle-create">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label><i class="fas fa-tag mr-1"></i>Nombre del Ciclo *</label>
+                            <input type="text" class="form-control" name="name" required
+                                   autocomplete="off" aria-label=""
+                                   placeholder="Ej: Ciclo Verano 2026">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label><i class="fas fa-clock mr-1"></i>Duración *</label>
+                            <select class="form-control" name="duration_months" required>
+                                <option value="1">1 mes</option>
+                                <option value="2">2 meses</option>
+                                <option value="3">3 meses</option>
+                                <option value="6">6 meses</option>
+                                <option value="12">Anual</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar mr-1"></i>Fecha de Inicio</label>
+                            <input type="date" class="form-control" name="start_date">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-check mr-1"></i>Fecha de Fin</label>
+                            <input type="date" class="form-control" name="end_date">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save mr-1"></i>Guardar Ciclo
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+$('#form-cycle-create').on('submit', function(e) {
+    e.preventDefault();
+    $.ajax({
+        url: '{% url "apps.students:save_cycle" %}',
+        type: 'POST',
+        data: $(this).serialize(),
+        success: function(response) {
+            if (response.success) {
+                toastr.success(response.message);
+                $('#modal_cycle_create').modal('hide');
+                location.reload();
+            } else {
+                toastr.error(response.message);
+            }
+        },
+        error: function(xhr) {
+            toastr.error('Error al guardar el ciclo');
+        }
+    });
+});
+</script>

@@ -1,0 +1,152 @@
+{% extends 'home.html' %}
+{% load static %}
+{% block title %}
+    Gestión de Planes
+{% endblock title %}
+
+{% block body %}
+    <div class="content-header">
+        <div class="container-fluid roboto-condensed-regular">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="m-0 text-dark">
+                                <i class="fas fa-calendar-alt mr-2"></i>Gestión de Planes
+                            </h1>
+                            <p class="text-muted mb-0">Administra los planes de suscripción disponibles</p>
+                        </div>
+                        <button type="button" onclick="showModalView('modal_plan_create')"
+                                class="btn btn-primary">
+                            <i class="fas fa-plus mr-1"></i>Nuevo Plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0 text-primary">
+                        <i class="fas fa-list mr-2"></i>Planes Registrados
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Turno</th>
+                                    <th>Días</th>
+                                    <th>Precio</th>
+                                    <th>Estado</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for plan in plans %}
+                                <tr>
+                                    <td>{{ plan.id }}</td>
+                                    <td><strong>{{ plan.name }}</strong></td>
+                                    <td>
+                                        {% if plan.turn %}
+                                            <span class="badge badge-info">{{ plan.turn.name }}</span><br>
+                                            <small class="text-muted">{{ plan.turn.schedule }}</small>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ plan.get_weekdays_display }}</small>
+                                    </td>
+                                    <td>S/ {{ plan.price }}</td>
+                                    <td>
+                                        {% if plan.is_active %}
+                                            <span class="badge badge-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-warning rounded-circle" 
+                                                onclick="updatePlan({{ plan.id }})" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">
+                                        <div class="alert alert-info">
+                                            No hay planes registrados. <a href="#" onclick="showModalView('modal_plan_create')">Crea el primero</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para crear plan -->
+    <div class="modal fade" id="modal_plan_create" tabindex="-1" role="dialog">
+        <div id="modal-plan-create-content"></div>
+    </div>
+
+    <!-- Modal para actualizar plan -->
+    <div class="modal fade" id="modal_plan_update" tabindex="-1" role="dialog">
+        <div id="modal-plan-update-content"></div>
+    </div>
+
+    <script type="text/javascript">
+        function showModalView(modalName) {
+            let url = '';
+            if (modalName === 'modal_plan_create') {
+                url = '{% url "apps.sales:modal_plan_create" %}';
+                $('#modal-plan-create-content').html('');
+                $('#modal_plan_create').modal('show');
+            } else if (modalName === 'modal_plan_update') {
+                url = '{% url "apps.sales:modal_plan_update" %}';
+                $('#modal-plan-update-content').html('');
+                $('#modal_plan_update').modal('show');
+            }
+
+            if (url) {
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function (response) {
+                        if (modalName === 'modal_plan_create') {
+                            $('#modal-plan-create-content').html(response.form);
+                        } else if (modalName === 'modal_plan_update') {
+                            $('#modal-plan-update-content').html(response.form);
+                        }
+                    },
+                    error: function () {
+                        alert('Error al cargar el formulario');
+                    }
+                });
+            }
+        }
+
+        function updatePlan(pk) {
+            $.ajax({
+                url: '{% url "apps.sales:modal_plan_update" %}',
+                type: 'GET',
+                data: {'pk': pk},
+                success: function (response) {
+                    $('#modal-plan-update-content').html(response.form);
+                    $('#modal_plan_update').modal('show');
+                },
+                error: function () {
+                    alert('Error al cargar el formulario de actualización');
+                }
+            });
+        }
+    </script>
+{% endblock body %}
+

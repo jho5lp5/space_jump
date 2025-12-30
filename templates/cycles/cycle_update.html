@@ -1,0 +1,87 @@
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header bg-gradient-warning text-white">
+            <h5 class="modal-title"><i class="fas fa-edit mr-2"></i>Editar Ciclo</h5>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <form id="form-cycle-update">
+            <input type="hidden" name="cycle_id" value="{{ cycle_obj.id }}">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label><i class="fas fa-tag mr-1"></i>Nombre del Ciclo *</label>
+                            <input type="text" class="form-control" name="name" required 
+                                   value="{{ cycle_obj.name }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label><i class="fas fa-clock mr-1"></i>Duración *</label>
+                            <select class="form-control" name="duration_months" required>
+                                <option value="1" {% if cycle_obj.duration_months == 1 %}selected{% endif %}>1 mes</option>
+                                <option value="2" {% if cycle_obj.duration_months == 2 %}selected{% endif %}>2 meses</option>
+                                <option value="3" {% if cycle_obj.duration_months == 3 %}selected{% endif %}>3 meses</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar mr-1"></i>Fecha de Inicio</label>
+                            <input type="date" class="form-control" name="start_date" 
+                                   value="{{ cycle_obj.start_date|date:'Y-m-d' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-check mr-1"></i>Fecha de Fin</label>
+                            <input type="date" class="form-control" name="end_date"
+                                   value="{{ cycle_obj.end_date|date:'Y-m-d' }}">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="is_active" name="is_active"
+                               {% if cycle_obj.is_active %}checked{% endif %}>
+                        <label class="custom-control-label" for="is_active">Ciclo Activo</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-save mr-1"></i>Actualizar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+$('#form-cycle-update').on('submit', function(e) {
+    e.preventDefault();
+    var formData = $(this).serialize();
+    formData += '&is_active=' + ($('#is_active').is(':checked') ? 'true' : 'false');
+    
+    $.ajax({
+        url: '{% url "apps.students:update_cycle" %}',
+        type: 'POST',
+        data: formData,
+        success: function(response) {
+            if (response.success) {
+                toastr.success(response.message);
+                $('#modal_cycle_update').modal('hide');
+                location.reload();
+            } else {
+                toastr.error(response.message);
+            }
+        },
+        error: function() {
+            toastr.error('Error al actualizar');
+        }
+    });
+});
+</script>

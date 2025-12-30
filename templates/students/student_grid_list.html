@@ -1,0 +1,174 @@
+{% load static %}
+
+{% if student_set %}
+    <!-- Filtros de búsqueda -->
+    <div class="row mb-3 p-3">
+        <div class="col-md-4">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white">
+                        <i class="fas fa-search text-primary"></i>
+                    </span>
+                </div>
+                <input type="text" class="form-control" id="search-student" 
+                       placeholder="Buscar por nombre o DNI...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-control" id="filter-subsidiary">
+                <option value="">Todas las sedes</option>
+                {% for stat in subsidiary_stats %}
+                    <option value="{{ stat.subsidiary__name }}">{{ stat.subsidiary__name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-control" id="filter-status">
+                <option value="">Todos los estados</option>
+                <option value="active">Activos</option>
+                <option value="inactive">Inactivos</option>
+            </select>
+        </div>
+        <div class="col-md-2 text-right">
+            <span class="badge badge-primary p-2">
+                <i class="fas fa-users mr-1"></i>Total: {{ student_set|length }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Tabla de deportistas -->
+    <div class="table-responsive">
+        <table class="table table-hover table-striped mb-0" id="students-table">
+            <thead class="thead-dark">
+                <tr>
+                    <th style="width: 60px;" class="text-center">
+                        <i class="fas fa-image"></i>
+                    </th>
+                    <th style="width: 100px;">
+                        <i class="fas fa-id-card mr-1"></i>DNI
+                    </th>
+                    <th>
+                        <i class="fas fa-user mr-1"></i>Deportista
+                    </th>
+                    <th style="width: 80px;">
+                        <i class="fas fa-birthday-cake mr-1"></i>Edad
+                    </th>
+                    <th style="width: 120px;">
+                        <i class="fas fa-phone mr-1"></i>Teléfono
+                    </th>
+                    <th style="width: 120px;">
+                        <i class="fas fa-mobile-alt mr-1"></i>Tel. Apoderado
+                    </th>
+                    <th style="width: 130px;">
+                        <i class="fas fa-building mr-1"></i>Sede
+                    </th>
+                    <th style="width: 100px;">
+                        <i class="fas fa-toggle-on mr-1"></i>Estado
+                    </th>
+                    <th style="width: 120px;" class="text-center">
+                        <i class="fas fa-cog mr-1"></i>Acciones
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in student_set %}
+                <tr data-status="{% if student.is_active %}active{% else %}inactive{% endif %}">
+                    <td class="text-center">
+                        {% if student.photo %}
+                            <img src="{{ student.photo.url }}" alt="Foto" 
+                                 class="img-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                        {% else %}
+                            <img src="{% static 'dist/img/employee0.jpg' %}" alt="Sin foto" 
+                                 class="img-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                        {% endif %}
+                    </td>
+                    <td>
+                        <strong>{{ student.document_number|default:"-" }}</strong>
+                    </td>
+                    <td>
+                        <div>
+                            <strong class="text-dark">{{ student.full_name|default:"-" }}</strong>
+                        </div>
+                        {% if student.address %}
+                        <small class="text-muted">
+                            <i class="fas fa-map-marker-alt mr-1"></i>{{ student.address|truncatechars:30 }}
+                        </small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if student.current_age %}
+                            <span class="badge badge-info">{{ student.current_age }} años</span>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if student.phone %}
+                            <a href="tel:{{ student.phone }}" class="text-primary">
+                                <i class="fas fa-phone mr-1"></i>{{ student.phone }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if student.parent_phone %}
+                            <a href="tel:{{ student.parent_phone }}" class="text-success">
+                                <i class="fas fa-mobile-alt mr-1"></i>{{ student.parent_phone }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if student.subsidiary %}
+                            <span class="badge badge-primary">{{ student.subsidiary.name }}</span>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if student.is_active %}
+                            <span class="badge badge-success">
+                                <i class="fas fa-check mr-1"></i>Activo
+                            </span>
+                        {% else %}
+                            <span class="badge badge-danger">
+                                <i class="fas fa-times mr-1"></i>Inactivo
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-warning" 
+                                    onclick="updateStudent({{ student.id }})" 
+                                    title="Editar deportista">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-info" 
+                                    onclick="downloadStudentPDF({{ student.id }})" 
+                                    title="Descargar ficha">
+                                <i class="fas fa-file-pdf"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+
+    </script>
+
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-user-graduate fa-4x text-muted mb-3"></i>
+        <h4 class="text-muted">No hay deportistas registrados</h4>
+        <p class="text-muted">Comienza registrando tu primer deportista</p>
+        <button class="btn btn-primary" onclick="showModalView('modal_student_create')">
+            <i class="fas fa-plus mr-1"></i>Registrar Deportista
+        </button>
+    </div>
+{% endif %}

@@ -1,0 +1,77 @@
+{% load static %}
+<div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content border-0 shadow">
+        <div id="modal-loader" class="overlay" style="display: none">
+            <i class="fas fa-3x fa-sync fa-spin text-warning"></i>
+        </div>
+        
+        <div class="modal-header bg-warning text-white">
+            <h5 class="modal-title">
+                <i class="fas fa-edit mr-2"></i>Actualizar Turno
+            </h5>
+            <button type="button" class="close text-white" data-dismiss="modal">
+                <span>&times;</span>
+            </button>
+        </div>
+
+        <form id="form-turn-update" action="{% url 'apps.sales:update_turn' %}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="turn_id" value="{{ turn_obj.id }}">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="name">Nombre del Turno <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ turn_obj.name }}" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="schedule">Horario <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="schedule" name="schedule" value="{{ turn_obj.schedule }}" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="age_description">Descripción de Edad</label>
+                    <input type="text" class="form-control" id="age_description" name="age_description" value="{{ turn_obj.age_description|default_if_none:'' }}" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="true" {% if turn_obj.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="is_active">
+                            Activo
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-warning">Actualizar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#form-turn-update').submit(function(e) {
+            e.preventDefault();
+            $('#modal-loader').show();
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: $(this).serialize(),
+                headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        toastr.error(response.message);
+                    }
+                    $('#modal-loader').hide();
+                },
+                error: function() {
+                    toastr.error('Error al actualizar el turno');
+                    $('#modal-loader').hide();
+                }
+            });
+        });
+    });
+</script>
+

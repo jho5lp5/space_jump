@@ -1,0 +1,215 @@
+{% extends 'home.html' %}
+{% load static %}
+{% block title %}Gestión de Ciclos{% endblock title %}
+
+{% block body %}
+<div class="content-header">
+    <div class="container-fluid roboto-condensed-regular">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="m-0 text-dark">
+                            <i class="fas fa-calendar-alt mr-2"></i>Gestión de Ciclos
+                        </h1>
+                        <p class="text-muted mb-0">Administra ciclos, horarios y turnos de entrenamiento</p>
+                    </div>
+                    <button type="button" onclick="showCycleCreateModal()"
+                            class="btn btn-primary rounded-pill shadow">
+                        <i class="fas fa-plus mr-1"></i>Nuevo Ciclo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {% for cycle in cycles %}
+        <div class="card shadow-sm mb-4 cycle-card">
+            <div class="card-header bg-gradient-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-sync-alt mr-2"></i>{{ cycle.name }}
+                        <span class="badge badge-light ml-2">{{ cycle.duration_months }} mes{% if cycle.duration_months > 1 %}es{% endif %}</span>
+                    </h4>
+                    <div>
+                        {% if cycle.start_date %}
+                        <span class="badge badge-info mr-2">
+                            <i class="fas fa-calendar mr-1"></i>{{ cycle.start_date|date:"d/m/Y" }} - {{ cycle.end_date|date:"d/m/Y" }}
+                        </span>
+                        {% endif %}
+                        <button class="btn btn-sm btn-light" onclick="updateCycle({{ cycle.id }})" title="Editar Ciclo">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-success ml-1" onclick="createSchedule({{ cycle.id }})" title="Agregar Horario">
+                            <i class="fas fa-plus"></i> Horario
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if cycle.schedules.all %}
+                <div class="row">
+                    {% for schedule in cycle.schedules.all %}
+                    <div class="col-lg-6 mb-3">
+                        <div class="card border-left-info h-100">
+                            <div class="card-header bg-light py-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0 text-info">
+                                        <i class="fas fa-calendar-week mr-2"></i>{{ schedule.name }}
+                                    </h5>
+                                    <div>
+                                        <span class="badge badge-success">S/ {{ schedule.price }}</span>
+                                        <button class="btn btn-xs btn-warning ml-1" onclick="updateSchedule({{ schedule.id }})" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-xs btn-primary ml-1" onclick="createTimeSlot({{ schedule.id }})" title="Agregar Turno">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body py-2">
+                                <div class="mb-2">
+                                    <small class="text-muted">Días:</small>
+                                    <span class="ml-2">
+                                        {% if schedule.monday %}<span class="badge badge-secondary">Lun</span>{% endif %}
+                                        {% if schedule.tuesday %}<span class="badge badge-secondary">Mar</span>{% endif %}
+                                        {% if schedule.wednesday %}<span class="badge badge-secondary">Mié</span>{% endif %}
+                                        {% if schedule.thursday %}<span class="badge badge-secondary">Jue</span>{% endif %}
+                                        {% if schedule.friday %}<span class="badge badge-secondary">Vie</span>{% endif %}
+                                        {% if schedule.saturday %}<span class="badge badge-secondary">Sáb</span>{% endif %}
+                                    </span>
+                                </div>
+                                
+                                {% if schedule.time_slots.all %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover mb-0">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Turno</th>
+                                                <th>Edad</th>
+                                                <th>Cap.</th>
+                                                <th>Profesor</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for slot in schedule.time_slots.all %}
+                                            <tr>
+                                                <td>
+                                                    <i class="fas fa-clock text-primary mr-1"></i>
+                                                    {{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}
+                                                </td>
+                                                <td><small>{{ slot.age_description|default:"Todas" }}</small></td>
+                                                <td><span class="badge badge-info">{{ slot.capacity }}</span></td>
+                                                <td>
+                                                    {% if slot.teacher %}
+                                                        <span class="badge badge-success">
+                                                            <i class="fas fa-chalkboard-teacher mr-1"></i>
+                                                            {{ slot.teacher.get_full_name|default:slot.teacher.username }}
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="text-muted">-</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-xs btn-outline-warning" onclick="updateTimeSlot({{ slot.id }})">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-light mb-0 py-2">
+                                    <small><i class="fas fa-info-circle mr-1"></i>Sin turnos. <a href="#" onclick="createTimeSlot({{ schedule.id }})">Agregar turno</a></small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    No hay horarios configurados para este ciclo.
+                    <a href="#" onclick="createSchedule({{ cycle.id }})" class="alert-link">Crear primer horario</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-calendar-alt fa-4x text-muted mb-3"></i>
+                <h4>No hay ciclos registrados</h4>
+                <p class="text-muted">Comienza creando tu primer ciclo de entrenamiento</p>
+                <button class="btn btn-primary" onclick="showCycleCreateModal()">
+                    <i class="fas fa-plus mr-1"></i>Crear Ciclo
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modales -->
+<div class="modal fade" id="modal_cycle_create" tabindex="-1"><div id="modal-cycle-create-content"></div></div>
+<div class="modal fade" id="modal_cycle_update" tabindex="-1"><div id="modal-cycle-update-content"></div></div>
+<div class="modal fade" id="modal_schedule_create" tabindex="-1"><div id="modal-schedule-create-content"></div></div>
+<div class="modal fade" id="modal_schedule_update" tabindex="-1"><div id="modal-schedule-update-content"></div></div>
+<div class="modal fade" id="modal_timeslot_create" tabindex="-1"><div id="modal-timeslot-create-content"></div></div>
+<div class="modal fade" id="modal_timeslot_update" tabindex="-1"><div id="modal-timeslot-update-content"></div></div>
+
+<script type="text/javascript">
+function showCycleCreateModal() {
+    $.get('{% url "apps.students:modal_cycle_create" %}', function(response) {
+        $('#modal-cycle-create-content').html(response.form);
+        $('#modal_cycle_create').modal('show');
+    });
+}
+
+function updateCycle(pk) {
+    $.get('{% url "apps.students:modal_cycle_update" %}', {pk: pk}, function(response) {
+        $('#modal-cycle-update-content').html(response.form);
+        $('#modal_cycle_update').modal('show');
+    });
+}
+
+function createSchedule(cycleId) {
+    $.get('{% url "apps.students:modal_schedule_create" %}', {cycle_id: cycleId}, function(response) {
+        $('#modal-schedule-create-content').html(response.form);
+        $('#modal_schedule_create').modal('show');
+    });
+}
+
+function updateSchedule(pk) {
+    $.get('{% url "apps.students:modal_schedule_update" %}', {pk: pk}, function(response) {
+        $('#modal-schedule-update-content').html(response.form);
+        $('#modal_schedule_update').modal('show');
+    });
+}
+
+function createTimeSlot(scheduleId) {
+    $.get('{% url "apps.students:modal_timeslot_create" %}', {schedule_id: scheduleId}, function(response) {
+        $('#modal-timeslot-create-content').html(response.form);
+        $('#modal_timeslot_create').modal('show');
+    });
+}
+
+function updateTimeSlot(pk) {
+    $.get('{% url "apps.students:modal_timeslot_update" %}', {pk: pk}, function(response) {
+        $('#modal-timeslot-update-content').html(response.form);
+        $('#modal_timeslot_update').modal('show');
+    });
+}
+</script>
+
+<style>
+.cycle-card { border-radius: 12px; overflow: hidden; }
+.border-left-info { border-left: 4px solid #17a2b8 !important; }
+.btn-xs { padding: 0.15rem 0.4rem; font-size: 0.75rem; }
+</style>
+{% endblock body %}
