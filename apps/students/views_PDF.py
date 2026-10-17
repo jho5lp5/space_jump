@@ -26,6 +26,8 @@ import datetime
 from datetime import datetime
 import requests
 
+from apps.students.models import Student
+
 styles = getSampleStyleSheet()
 styles.add(ParagraphStyle(name='Center', alignment=TA_CENTER, leading=8, fontName='Square', fontSize=14))
 styles.add(ParagraphStyle(name='Center-Blue', alignment=TA_CENTER, leading=8, fontName='Square-Bold', fontSize=14,
@@ -435,15 +437,8 @@ def generate_student_enrollment_pdf(student_id):
         elements.append(Paragraph('DATOS PERSONALES DEL PADRE/ MADRE/ APODERADO', section_style))
 
         parent_data = []
-        # Obtener tipo de documento del padre
-        parent_doc_type = 'DNI'
-        if student.parent_document:
-            if student.parent_document == '01':
-                parent_doc_type = 'DNI'
-            elif student.parent_document == '06':
-                parent_doc_type = 'RUC'
-            else:
-                parent_doc_type = 'DNI'
+        # Obtener tipo de documento del padre (incluye SIN DOCUMENTO)
+        parent_doc_type = Student.DOCUMENT_LABELS.get(student.parent_document, 'SIN DOCUMENTO')
 
         parent_data.append([
             [Paragraph('Nombres:', label_style), Paragraph(student.parent_first_name or '-', value_style)],

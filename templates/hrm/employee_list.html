@@ -5,25 +5,22 @@
 {% endblock title %}
 
 {% block body %}
-    <div class="card border-0 shadow-sm p-3 roboto-condensed-regular">
-        <div class="card-header bg-gradient-primary text-white border-0">
-            <div class="row align-items-center">
-                <div class="col-md-12">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center">
-                            <h6 class="mb-0 mr-3">
-                                <i class="fas fa-users mr-2"></i>Gestión de Empleados
-                            </h6>
-                            <button type="button" onclick="showModalView('modal_user_create')"
-                                    class="btn btn-light btn-sm rounded-pill">
-                                <i class="fas fa-user-plus mr-2"></i>Nuevo Empleado
-                            </button>
-                        </div>
-                    </div>
-                </div>
+    <div class="sj-page-head">
+        <div class="sj-page-head__left">
+            <span class="sj-page-icon"><i class="fas fa-users"></i></span>
+            <div>
+                <h1 class="sj-page-title">Empleados</h1>
+                <p class="sj-page-sub">Profesores, administradores y personal de las sedes</p>
             </div>
         </div>
-        
+        <div class="sj-page-head__actions">
+            <button type="button" onclick="showModalView('modal_user_create')" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i>Nuevo Empleado
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
         <div class="card-body p-4">
             <div class="row mb-4">
                 <div class="col-md-6">
@@ -94,7 +91,7 @@
         }
         
         .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--sj-tint-orange) 0%, var(--sj-surface) 100%);
         }
         
         .btn-group .btn {
@@ -157,21 +154,21 @@
         
         /* Indicador de filtros activos */
         .filter-active {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+            background: linear-gradient(135deg, #ECFDF3 0%, #D9F6E4 100%) !important;
             color: white !important;
             transform: scale(1.05);
             box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
         }
         
         .filter-inactive {
-            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%) !important;
+            background: linear-gradient(135deg, #FFF1F3 0%, #FFE4E6 100%) !important;
             color: white !important;
             transform: scale(1.05);
             box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
         }
         
         .filter-all {
-            background: linear-gradient(135deg, #007bff 0%, #6f42c1 100%) !important;
+            background: linear-gradient(135deg, var(--sj-info-bg) 0%, #DBEAFE 100%) !important;
             color: white !important;
             transform: scale(1.05);
             box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);

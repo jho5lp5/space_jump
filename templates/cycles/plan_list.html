@@ -7,23 +7,20 @@
 {% block body %}
     <div class="content-header">
         <div class="container-fluid roboto-condensed-regular">
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h1 class="m-0 text-dark">
-                                <i class="fas fa-calendar-alt mr-2"></i>Gestión de Planes
-                            </h1>
-                            <p class="text-muted mb-0">Administra los planes de suscripción disponibles</p>
-                        </div>
-                        <button type="button" onclick="showModalView('modal_plan_create')"
-                                class="btn btn-primary">
-                            <i class="fas fa-plus mr-1"></i>Nuevo Plan
-                        </button>
+            <div class="sj-page-head">
+                <div class="sj-page-head__left">
+                    <span class="sj-page-icon"><i class="fas fa-calendar-alt mr-2"></i></span>
+                    <div>
+                        <h1 class="sj-page-title">Gestión de Planes</h1>
+                        <p class="sj-page-sub">Administra los planes de suscripción disponibles</p>
                     </div>
                 </div>
+                <div class="sj-page-head__actions">
+                        <button type="button" onclick="showModalView('modal_plan_create')" class="btn btn-primary">
+                            <i class="fas fa-plus mr-1"></i>Nuevo Plan
+                        </button>
+                </div>
             </div>
-
             <div class="card shadow-sm">
                 <div class="card-header bg-white border-0 py-3">
                     <h5 class="card-title mb-0 text-primary">

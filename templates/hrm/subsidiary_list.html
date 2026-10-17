@@ -1,20 +1,32 @@
 {% extends 'home.html' %}
 {% load static %}
 {% block title %}
-    System | Sucursal
+    Sucursales | SPACE JUMP
 {% endblock title %}
 
 {% block body %}
-    <div class="card roboto-condensed-regular">
-        <div class="card-header p-2">
-            <button type="button" onclick="showModalView('modal_subsidiary_create')"
-                    class="btn btn-secondary btn-sm"><i class="fas fa-home"></i> Registrar nueva sucursal
-            </button>
-
+    <div class="sj-page-head">
+        <div class="sj-page-head__left">
+            <span class="sj-page-icon"><i class="fas fa-building"></i></span>
+            <div>
+                <h1 class="sj-page-title">Sucursales</h1>
+                <p class="sj-page-sub">Sedes de la academia y sus direcciones</p>
+            </div>
         </div>
-        <div class="card-body p-2">
+        <div class="sj-page-head__actions">
+            <button type="button" onclick="showModalView('modal_subsidiary_create')" class="btn btn-primary">
+                <i class="fas fa-plus"></i>Nueva sucursal
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-list"></i>Sucursales registradas</h3>
+        </div>
+        <div class="card-body p-0">
             <div id="employee-grid-list"
-                 class="table-responsive small">{% include "hrm/subsidiary_grid_list.html" %}</div>
+                 class="table-responsive">{% include "hrm/subsidiary_grid_list.html" %}</div>
         </div>
     </div>
     <div class="modal fade" id="modal-subsidiary-create" tabindex="-1" role="dialog"

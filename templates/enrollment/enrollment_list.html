@@ -5,34 +5,31 @@
 {% block body %}
     <div class="content-header">
         <div class="container-fluid roboto-condensed-regular">
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h1 class="m-0 text-dark">
-                                <i class="fas fa-user-plus mr-2"></i>Inscripciones
-                            </h1>
-                            <p class="text-muted mb-0">Gestiona las inscripciones de deportistas</p>
-                        </div>
-                        <button type="button" onclick="showEnrollmentCreateModal()"
-                                class="btn btn-primary rounded-pill shadow">
-                            <i class="fas fa-plus mr-1"></i>Nueva Inscripción
-                        </button>
+            <div class="sj-page-head">
+                <div class="sj-page-head__left">
+                    <span class="sj-page-icon"><i class="fas fa-user-plus mr-2"></i></span>
+                    <div>
+                        <h1 class="sj-page-title">Inscripciones</h1>
+                        <p class="sj-page-sub">Gestiona las inscripciones de deportistas</p>
                     </div>
                 </div>
+                <div class="sj-page-head__actions">
+                        <button type="button" onclick="showEnrollmentCreateModal()" class="btn btn-primary">
+                            <i class="fas fa-plus mr-1"></i>Nueva Inscripción
+                        </button>
+                </div>
             </div>
-
             <!-- Filtros -->
-            <div class="card shadow-sm mb-4 border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card shadow-sm mb-4 border-0" style="background: linear-gradient(135deg, var(--sj-tint-orange) 0%, var(--sj-surface) 100%);">
                 <div class="card-body py-4">
-                    <h6 class="text-white mb-3 font-weight-bold">
+                    <h6 class="mb-3 font-weight-bold">
                         <i class="fas fa-filter mr-2"></i>Filtros de Búsqueda
                     </h6>
                     
                     <!-- Primera fila: Búsqueda por deportista -->
                     <div class="row mb-3">
                         <div class="col-lg-6 col-md-8 col-sm-12">
-                            <label class="text-white small font-weight-bold mb-1 d-block">
+                            <label class="small font-weight-bold mb-1 d-block">
                                 <i class="fas fa-user mr-1"></i>Buscar Deportista
                             </label>
                             <input type="text" class="form-control rounded-pill shadow-sm" id="search-enrollment"
@@ -43,7 +40,7 @@
                     <!-- Segunda fila: Resto de filtros -->
                     <div class="row">
                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
-                            <label class="text-white small font-weight-bold mb-1 d-block">
+                            <label class="small font-weight-bold mb-1 d-block">
                                 <i class="fas fa-sync-alt mr-1"></i>Ciclo
                             </label>
                             <select class="form-control rounded-pill shadow-sm" id="filter-cycle" style="font-size: 0.875rem;">
@@ -54,7 +51,7 @@
                             </select>
                         </div>
                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
-                            <label class="text-white small font-weight-bold mb-1 d-block">
+                            <label class="small font-weight-bold mb-1 d-block">
                                 <i class="fas fa-calendar-week mr-1"></i>Horario
                             </label>
                             <select class="form-control rounded-pill shadow-sm" id="filter-schedule" style="font-size: 0.875rem;">
@@ -62,7 +59,7 @@
                             </select>
                         </div>
                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
-                            <label class="text-white small font-weight-bold mb-1 d-block">
+                            <label class="small font-weight-bold mb-1 d-block">
                                 <i class="fas fa-clock mr-1"></i>Turno
                             </label>
                             <select class="form-control rounded-pill shadow-sm" id="filter-timeslot" style="font-size: 0.875rem;">
@@ -70,7 +67,7 @@
                             </select>
                         </div>
                         <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
-                            <label class="text-white small font-weight-bold mb-1 d-block">
+                            <label class="small font-weight-bold mb-1 d-block">
                                 <i class="fas fa-chalkboard-teacher mr-1"></i>Profesor
                             </label>
                             <select class="form-control rounded-pill shadow-sm" id="filter-teacher" style="font-size: 0.875rem;">
@@ -81,7 +78,7 @@
                             </select>
                         </div>
                         <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
-                            <label class="text-white small font-weight-bold mb-1 d-block">
+                            <label class="small font-weight-bold mb-1 d-block">
                                 <i class="fas fa-building mr-1"></i>Sede
                             </label>
                             <select class="form-control rounded-pill shadow-sm" id="filter-subsidiary" style="font-size: 0.875rem;">

@@ -8,12 +8,16 @@ from apps import hrm, users
 
 class Student(models.Model):
     """Model for athletes of SPACE JUMP academy"""
+    # '00' = SIN DOCUMENTO: permite registrar expedite sin DNI ni RUC (menores
+    # sin documentos, extranjeros con pasaporte aún no tramitado, etc.).
+    NO_DOCUMENT = '00'
     DOCUMENT_CHOICES = (
-        ('01', 'DNI'), ('06', 'RUC'))
+        (NO_DOCUMENT, 'SIN DOCUMENTO'), ('01', 'DNI'), ('06', 'RUC'))
+    DOCUMENT_LABELS = dict(DOCUMENT_CHOICES)
 
     id = models.AutoField(primary_key=True)
     # Personal data
-    document = models.CharField('Tipo Documento', max_length=2, choices=DOCUMENT_CHOICES, default='01')
+    document = models.CharField('Tipo Documento', max_length=2, choices=DOCUMENT_CHOICES, default=NO_DOCUMENT)
     document_number = models.CharField('Número de Documento', max_length=15, null=True, blank=True)
     first_name = models.CharField('Primer Nombre', max_length=200, null=True, blank=True)
     second_name = models.CharField('Segundo Nombre', max_length=200, null=True, blank=True)
@@ -30,7 +34,7 @@ class Student(models.Model):
     parent_first_name = models.CharField('Nombres del Padre/Madre/Apoderado', max_length=200, null=True, blank=True)
     parent_surname = models.CharField('Apellidos del Padre/Madre/Apoderado', max_length=200, null=True, blank=True)
     parent_document = models.CharField('Tipo Documento del Padre/Madre/Apoderado', max_length=2,
-                                       choices=DOCUMENT_CHOICES, default='01', null=True, blank=True)
+                                       choices=DOCUMENT_CHOICES, default=NO_DOCUMENT, null=True, blank=True)
     parent_document_number = models.CharField('Número de Documento del Padre/Madre/Apoderado', max_length=15, null=True,
                                               blank=True)
     parent_phone = models.CharField('Teléfono del Padre/Madre/Apoderado', max_length=15, null=True, blank=True)
@@ -53,10 +57,27 @@ class Student(models.Model):
     def __str__(self):
         return str(self.full_name or f"{self.first_name} {self.surname}")
 
+    @property
+    def has_document(self):
+        """False cuando el deportista está registrado como SIN DOCUMENTO."""
+        return bool(self.document) and self.document != self.NO_DOCUMENT
+
+    @property
+    def document_label(self):
+        """Etiqueta lista para mostrar: 'DNI 12345678' o 'SIN DOCUMENTO'."""
+        if not self.has_document:
+            return 'SIN DOCUMENTO'
+        label = self.DOCUMENT_LABELS.get(self.document, self.document)
+        return f'{label} {self.document_number}' if self.document_number else label
+
+    @property
+    def age_display(self):
+        """Edad del deportista o guion si aún no tiene fecha de nacimiento."""
+        return f'{self.current_age} años' if self.current_age else '—'
+
     def save(self, *args, **kwargs):
-        if not self.full_name:
-            name_parts = [self.first_name, self.second_name, self.surname, self.second_surname]
-            self.full_name = ' '.join([part for part in name_parts if part])
+        name_parts = [self.first_name, self.second_name, self.surname, self.second_surname]
+        self.full_name = ' '.join([p for p in name_parts if p]) or None
         super().save(*args, **kwargs)
 
     class Meta:

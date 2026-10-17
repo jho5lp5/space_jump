@@ -30,6 +30,8 @@ def modal_student_create(request):
         c = {
             'date_now': date_now,
             'subsidiaries': subsidiaries,
+            'document_choices': Student.DOCUMENT_CHOICES,
+            'no_document': Student.NO_DOCUMENT,
         }
         return JsonResponse({
             'form': t.render(c, request),
@@ -45,22 +47,38 @@ def get_student_list(request):
             quantity=Count('id')
         ).order_by('-quantity')
 
+        total_students = student_set.count()
+
         return render(request, 'students/student_list.html', {
             'student_set': student_set,
             'subsidiary_stats': subsidiary_stats,
+            'total_students': total_students,
+            'students_without_document': student_set.filter(document=Student.NO_DOCUMENT).count(),
+            'students_without_birth_date': student_set.filter(birth_date__isnull=True).count(),
         })
 
 
 def get_api_student(request):
-    """Buscar estudiante por documento"""
+    """Buscar estudiante por documento.
+
+    Solo tiene sentido cuando el tipo de documento NO es 'SIN DOCUMENTO' y se
+    envía un número: en caso contrario devuelve `found: False` sin error.
+    """
     if request.method == 'GET':
-        document_number = request.GET.get('nro_document')
-        type_document = str(request.GET.get('type'))
-        
+        document_number = (request.GET.get('nro_document') or '').strip()
+        type_document = (request.GET.get('type') or '').strip()
+
+        if not document_number or type_document == Student.NO_DOCUMENT:
+            return JsonResponse({
+                'found': False,
+                'message': 'Búsqueda por documento no disponible para SIN DOCUMENTO.'
+            }, status=HTTPStatus.OK)
+
         student_set_search = Student.objects.filter(document=type_document, document_number=document_number)
         if student_set_search.exists():
             student_obj = student_set_search.last()
             return JsonResponse({
+                'found': True,
                 'pk': student_obj.id,
                 'names': student_obj.full_name,
                 'firstName': student_obj.first_name or '',
@@ -73,10 +91,61 @@ def get_api_student(request):
             }, status=HTTPStatus.OK)
         else:
             return JsonResponse({
+                'found': False,
                 'error': 'Deportista no encontrado. Registre manualmente.'
             }, status=HTTPStatus.NOT_FOUND)
 
     return JsonResponse({'message': 'Error de petición.'}, status=HTTPStatus.BAD_REQUEST)
+
+
+def _clean(value):
+    """Normaliza un valor de formulario: str recortado o cadena vacía."""
+    return (value or '').strip()
+
+
+def _upper(value):
+    value = _clean(value)
+    return value.upper() if value else ''
+
+
+def _parse_birth_date(raw):
+    """Devuelve (fecha, edad_actual) o (None, None) si no se ingresó fecha."""
+    raw = _clean(raw)
+    if not raw:
+        return None, None
+    try:
+        birth_date = datetime.strptime(raw, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return None, None
+    return birth_date, relativedelta(datetime.now().date(), birth_date).years
+
+
+def _resolve_document(raw_document, raw_document_number):
+    """Normaliza tipo + número de documento.
+
+    Si el tipo es SIN DOCUMENTO el número se descarta siempre. Si el tipo es
+    DNI/RUC y no viene número, se deja en blanco (no es obligatorio).
+    """
+    document = _clean(raw_document) or Student.NO_DOCUMENT
+    if document not in Student.DOCUMENT_LABELS:
+        document = Student.NO_DOCUMENT
+
+    document_number = _clean(raw_document_number)
+    if document == Student.NO_DOCUMENT or not document_number:
+        document_number = None
+
+    return document, document_number
+
+
+def _resolve_subsidiary(post_data):
+    """Obtiene la sede enviada; devuelve None si no se seleccionó ninguna."""
+    subsidiary_id = _clean(post_data.get('subsidiary'))
+    if not subsidiary_id:
+        return None
+    try:
+        return Subsidiary.objects.get(id=int(subsidiary_id))
+    except (Subsidiary.DoesNotExist, ValueError, TypeError):
+        return None
 
 
 @csrf_exempt
@@ -85,23 +154,24 @@ def save_student(request):
     if request.method == 'POST':
         try:
             # Datos personales del deportista
-            document = request.POST.get('document', '01')
-            document_number = request.POST.get('document_number', '')
-            first_name = request.POST.get('first_name', '')
-            second_name = request.POST.get('second_name', '')
-            surname = request.POST.get('surname', '')
-            second_surname = request.POST.get('second_surname', '')
-            birth_place = request.POST.get('birth_place', '')
-            birth_date_str = request.POST.get('birth_date', '')
-            address = request.POST.get('address', '')
-            phone = request.POST.get('phone', '')
+            document, document_number = _resolve_document(
+                request.POST.get('document'), request.POST.get('document_number'))
+            first_name = _upper(request.POST.get('first_name'))
+            second_name = _upper(request.POST.get('second_name'))
+            surname = _upper(request.POST.get('surname'))
+            second_surname = _upper(request.POST.get('second_surname'))
+            birth_place = _upper(request.POST.get('birth_place'))
+            address = _upper(request.POST.get('address'))
+            phone = _clean(request.POST.get('phone'))
+
+            birth_date, current_age = _parse_birth_date(request.POST.get('birth_date'))
 
             # Datos del padre/madre/apoderado
-            parent_first_name = request.POST.get('parent_first_name', '')
-            parent_surname = request.POST.get('parent_surname', '')
-            parent_document = request.POST.get('parent_document', '01')
-            parent_document_number = request.POST.get('parent_document_number', '')
-            parent_phone = request.POST.get('parent_phone', '')
+            parent_first_name = _upper(request.POST.get('parent_first_name'))
+            parent_surname = _upper(request.POST.get('parent_surname'))
+            parent_document, parent_document_number = _resolve_document(
+                request.POST.get('parent_document'), request.POST.get('parent_document_number'))
+            parent_phone = _clean(request.POST.get('parent_phone'))
 
             # Historia clínica
             diseases = request.POST.get('diseases', '')
@@ -111,51 +181,31 @@ def save_student(request):
             other_medical_info = request.POST.get('other_medical_info', '')
 
             # Información adicional
-            subsidiary_id = request.POST.get('subsidiary', '')
+            subsidiary = _resolve_subsidiary(request.POST)
             observations = request.POST.get('observations', '')
 
-            # Validaciones básicas
-            if not document_number or not first_name or not surname:
+            # Validaciones: solo el nombre es obligatorio.
+            # Tipo de documento, número y fecha de nacimiento son opcionales.
+            if not first_name or not surname:
                 return JsonResponse({
                     'success': False,
-                    'message': 'Los campos DNI, Nombres y Apellidos son obligatorios'
+                    'message': 'Los campos Nombres y Apellidos son obligatorios'
                 }, status=HTTPStatus.BAD_REQUEST)
-
-            # Procesar fechas
-            birth_date = None
-            if birth_date_str:
-                try:
-                    birth_date = datetime.strptime(birth_date_str, '%Y-%m-%d').date()
-                except:
-                    pass
-
-            # Calcular edad actual
-            current_age = None
-            if birth_date:
-                current_age = relativedelta(datetime.now().date(), birth_date).years
-
-            # Obtener sucursal
-            subsidiary = None
-            if subsidiary_id:
-                try:
-                    subsidiary = Subsidiary.objects.get(id=int(subsidiary_id))
-                except:
-                    pass
 
             # Crear estudiante
             student = Student(
                 document=document,
                 document_number=document_number,
-                first_name=first_name.upper(),
-                second_name=second_name.upper() if second_name else '',
-                surname=surname.upper(),
-                second_surname=second_surname.upper() if second_surname else '',
-                birth_place=birth_place.upper() if birth_place else '',
+                first_name=first_name,
+                second_name=second_name,
+                surname=surname,
+                second_surname=second_surname,
+                birth_place=birth_place,
                 birth_date=birth_date,
-                address=address.upper() if address else '',
+                address=address,
                 phone=phone,
-                parent_first_name=parent_first_name.upper() if parent_first_name else '',
-                parent_surname=parent_surname.upper() if parent_surname else '',
+                parent_first_name=parent_first_name,
+                parent_surname=parent_surname,
                 parent_document=parent_document,
                 parent_document_number=parent_document_number,
                 parent_phone=parent_phone,
@@ -182,7 +232,7 @@ def save_student(request):
                 if pdf_content:
                     import base64
                     pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
-                    pdf_filename = f"FICHA_INSCRIPCION_{student.document_number}_{student.id}.pdf"
+                    pdf_filename = f"FICHA_INSCRIPCION_{student.document_number or student.id}.pdf"
 
                     return JsonResponse({
                         'success': True,
@@ -227,6 +277,8 @@ def modal_student_update(request):
         c = {
             'student_obj': student_obj,
             'subsidiaries': subsidiaries,
+            'document_choices': Student.DOCUMENT_CHOICES,
+            'no_document': Student.NO_DOCUMENT,
         }
         return JsonResponse({
             'form': t.render(c, request),
@@ -247,21 +299,31 @@ def update_student(request):
 
             student = Student.objects.get(id=int(student_id))
 
-            # Actualizar campos (similar a save_student)
-            student.document = request.POST.get('document', student.document)
-            student.document_number = request.POST.get('document_number', student.document_number)
-            student.first_name = request.POST.get('first_name', student.first_name).upper()
-            student.second_name = request.POST.get('second_name', '').upper()
-            student.surname = request.POST.get('surname', student.surname).upper()
-            student.second_surname = request.POST.get('second_surname', '').upper()
-            student.birth_place = request.POST.get('birth_place', '').upper()
-            student.address = request.POST.get('address', '').upper()
-            student.phone = request.POST.get('phone', '')
-            student.parent_first_name = request.POST.get('parent_first_name', '').upper()
-            student.parent_surname = request.POST.get('parent_surname', '').upper()
-            student.parent_document = request.POST.get('parent_document', '01')
-            student.parent_document_number = request.POST.get('parent_document_number', '')
-            student.parent_phone = request.POST.get('parent_phone', '')
+            # Documento: 'SIN DOCUMENTO' es válido y no exige número.
+            student.document, student.document_number = _resolve_document(
+                request.POST.get('document'), request.POST.get('document_number'))
+
+            # Nombres: solo son obligatorios. Si llegan vacíos se conservan.
+            first_name = _upper(request.POST.get('first_name'))
+            surname = _upper(request.POST.get('surname'))
+            if not first_name or not surname:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Los campos Nombres y Apellidos son obligatorios'
+                }, status=HTTPStatus.BAD_REQUEST)
+
+            student.first_name = first_name
+            student.surname = surname
+            student.second_name = _upper(request.POST.get('second_name'))
+            student.second_surname = _upper(request.POST.get('second_surname'))
+            student.birth_place = _upper(request.POST.get('birth_place'))
+            student.address = _upper(request.POST.get('address'))
+            student.phone = _clean(request.POST.get('phone'))
+            student.parent_first_name = _upper(request.POST.get('parent_first_name'))
+            student.parent_surname = _upper(request.POST.get('parent_surname'))
+            student.parent_document, student.parent_document_number = _resolve_document(
+                request.POST.get('parent_document'), request.POST.get('parent_document_number'))
+            student.parent_phone = _clean(request.POST.get('parent_phone'))
             student.diseases = request.POST.get('diseases', '')
             student.medication_allergies = request.POST.get('medication_allergies', '')
             student.student_insurance = request.POST.get('student_insurance', '')
@@ -269,24 +331,13 @@ def update_student(request):
             student.other_medical_info = request.POST.get('other_medical_info', '')
             student.observations = request.POST.get('observations', '')
 
-            # Procesar fechas
-            birth_date_str = request.POST.get('birth_date', '')
-            if birth_date_str:
-                try:
-                    student.birth_date = datetime.strptime(birth_date_str, '%Y-%m-%d').date()
-                    student.current_age = relativedelta(datetime.now().date(), student.birth_date).years
-                except:
-                    pass
+            # Fecha de nacimiento: opcional. Vacío o inválida la deja en NULL.
+            birth_date, current_age = _parse_birth_date(request.POST.get('birth_date'))
+            student.birth_date = birth_date
+            student.current_age = current_age
 
-            # Sucursal
-            subsidiary_id = request.POST.get('subsidiary', '')
-            if subsidiary_id:
-                try:
-                    student.subsidiary = Subsidiary.objects.get(id=int(subsidiary_id))
-                except:
-                    pass
-                if subsidiary_id == '':
-                    student.subsidiary = None
+            # Sede: enviar vacío la desvincula.
+            student.subsidiary = _resolve_subsidiary(request.POST)
 
             # Foto
             if 'photo' in request.FILES:
@@ -326,13 +377,15 @@ def search_students_autocomplete(request):
             Q(first_name__icontains=query) |
             Q(surname__icontains=query),
             is_active=True
-        )[:10]
+        ).order_by('full_name')[:10]
 
         results = [{
             'id': s.id,
-            'text': f"{s.full_name} - {s.document_number}",
+            'text': f"{s.full_name} · {s.document_label}",
             'full_name': s.full_name,
-            'document_number': s.document_number,
+            'document_number': s.document_number or '',
+            'document_label': s.document_label,
+            'current_age': s.current_age,
         } for s in students]
 
         return JsonResponse({'results': results})

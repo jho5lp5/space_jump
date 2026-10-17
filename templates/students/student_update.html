@@ -1,225 +1,331 @@
 {% load static %}
-<div class="modal-dialog modal-dialog-centered modal-xl" role="document">
-    <div class="modal-content border-0 shadow roboto-condensed-regular">
-        <div id="modal-loader" class="overlay" style="display: none">
-            <i class="fas fa-3x fa-sync fa-spin text-warning"></i>
+<div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable" role="document">
+    <div class="modal-content sj-modal">
+
+        <div id="modal-loader" class="sj-overlay" style="display: none">
+            <i class="fas fa-3x fa-circle-notch fa-spin"></i>
         </div>
-        
-        <div class="modal-header bg-warning text-white border-0">
-            <h5 class="modal-title font-weight-bold">
-                <i class="fas fa-user-edit mr-2"></i>Actualización de Deportista
-            </h5>
-            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+
+        <div class="modal-header">
+            <span class="modal-title__icon"><i class="fas fa-user-pen"></i></span>
+            <h5 class="modal-title">Editar deportista</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
                 <span aria-hidden="true">&times;</span>
             </button>
         </div>
 
-        <form id="form-student-update" action="{% url 'apps.students:update_student' %}" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <input type="hidden" name="student_id" value="{{ student_obj.id }}">
+        {% if not student_obj %}
+            <div class="modal-body">
+                <div class="sj-empty">
+                    <div class="sj-empty__icon"><i class="fas fa-user-slash"></i></div>
+                    <h4 class="sj-empty__title">Deportista no encontrado</h4>
+                    <p class="sj-empty__text">El registro solicitado no existe o fue eliminado.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        {% else %}
+            <form id="form-student-update" action="{% url 'apps.students:update_student' %}" method="POST"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="student_id" value="{{ student_obj.id }}">
 
-            <div class="modal-body p-4">
-                <!-- Datos Personales -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="card card-outline card-primary">
-                            <div class="card-header">
-                                <h6 class="card-title text-primary mb-0">
-                                    <i class="fas fa-user mr-2"></i>Datos Personales del Deportista
-                                </h6>
+                <div class="modal-body">
+
+                    <!-- Resumen del registro -->
+                    <div class="sj-record-head">
+                        <img class="sj-avatar sj-avatar--lg"
+                             src="{% if student_obj.photo %}{{ student_obj.photo.url }}{% else %}{% static 'dist/img/employee0.jpg' %}{% endif %}"
+                             alt="Foto del deportista">
+                        <div class="sj-record-head__info">
+                            <h3 class="sj-record-head__name">{{ student_obj.full_name|default:"Sin nombre" }}</h3>
+                            <div class="sj-record-head__meta">
+                                <span class="sj-chip {% if student_obj.has_document %}sj-chip--info{% else %}sj-chip--neutral{% endif %}">
+                                    {{ student_obj.document_label }}
+                                </span>
+                                <span class="sj-chip sj-chip--neutral">{{ student_obj.age_display }}</span>
+                                {% if student_obj.subsidiary %}
+                                    <span class="sj-chip sj-chip--neutral">
+                                        <i class="fas fa-building"></i>{{ student_obj.subsidiary.name }}
+                                    </span>
+                                {% endif %}
                             </div>
-                            <div class="card-body">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- ============ IDENTIFICACIÓN ============ -->
+                        <div class="col-12">
+                            <div class="sj-fieldset">
+                                <div class="sj-fieldset__head">
+                                    <span class="sj-fieldset__icon"><i class="fas fa-id-card"></i></span>
+                                    <div>
+                                        <h3 class="sj-fieldset__title">Identificación</h3>
+                                        <p class="sj-fieldset__sub">Documento, sede y fecha de nacimiento</p>
+                                    </div>
+                                </div>
+
                                 <div class="row">
-                                    <div class="col-lg-9">
-                                        <div class="row">
-                                            <div class="col-lg-3">
-                                                <div class="form-group mb-2">
-                                                    <label class="form-label">Tipo Doc. <span class="text-danger">*</span></label>
-                                                    <select class="form-control" name="document" required>
-                                                        <option value="01" {% if student_obj.document == '01' %}selected{% endif %}>DNI</option>
-                                                        <option value="06" {% if student_obj.document == '06' %}selected{% endif %}>RUC</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col-lg-3">
-                                                <div class="form-group mb-2">
-                                                    <label class="form-label">Número <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control" name="document_number" 
-                                                           value="{{ student_obj.document_number|default:'' }}" required>
-                                                </div>
-                                            </div>
-                                            <div class="col-lg-3">
-                                                <div class="form-group mb-2">
-                                                    <label class="form-label">Fecha Nacimiento</label>
-                                                    <input type="date" class="form-control" name="birth_date" 
-                                                           value="{% if student_obj.birth_date %}{{ student_obj.birth_date|date:'Y-m-d' }}{% endif %}">
-                                                </div>
-                                            </div>
-                                            <div class="col-lg-3">
-                                                <div class="form-group mb-2">
-                                                    <label class="form-label">Sede</label>
-                                                    <select class="form-control" name="subsidiary">
-                                                        <option value="">Seleccione...</option>
-                                                        {% for subsidiary in subsidiaries %}
-                                                            <option value="{{ subsidiary.id }}" {% if student_obj.subsidiary and student_obj.subsidiary.id == subsidiary.id %}selected{% endif %}>{{ subsidiary.name }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                            </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="form-group mb-0">
+                                            <label class="form-label" for="document">
+                                                <i class="fas fa-tag"></i>Tipo de documento
+                                            </label>
+                                            <select class="form-control" id="document" name="document">
+                                                {% for value, label in document_choices %}
+                                                    <option value="{{ value }}"
+                                                            {% if value == student_obj.document %}selected{% endif %}>
+                                                        {{ label }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                            <p class="sj-hint" id="document-hint">
+                                                <i class="fas fa-circle-info"></i><span></span>
+                                            </p>
                                         </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-4">
+                                        <div class="form-group mb-0">
+                                            <label class="form-label" for="document_number">
+                                                <i class="fas fa-hashtag"></i>Número de documento
+                                                <span class="sj-opt">Opcional</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="document_number"
+                                                   name="document_number"
+                                                   value="{{ student_obj.document_number|default:'' }}"
+                                                   placeholder="Ej: 70123456" autocomplete="off">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-4">
+                                        <div class="form-group mb-0">
+                                            <label class="form-label" for="birth_date">
+                                                <i class="fas fa-cake-candles"></i>Fecha de nacimiento
+                                                <span class="sj-opt">Opcional</span>
+                                            </label>
+                                            <input type="date" class="form-control" id="birth_date"
+                                                   name="birth_date"
+                                                   value="{% if student_obj.birth_date %}{{ student_obj.birth_date|date:'Y-m-d' }}{% endif %}">
+                                            <p class="sj-hint">
+                                                <i class="fas fa-calculator"></i>
+                                                <span>La edad se recalcula automáticamente.</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ============ DATOS + FOTO ============ -->
+                        <div class="col-12">
+                            <div class="sj-fieldset">
+                                <div class="sj-fieldset__head">
+                                    <span class="sj-fieldset__icon"><i class="fas fa-person-running"></i></span>
+                                    <div>
+                                        <h3 class="sj-fieldset__title">Datos del deportista</h3>
+                                        <p class="sj-fieldset__sub">Información personal y de contacto</p>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12 col-lg-3 order-lg-3 mb-3 mb-lg-0">
+                                        <div class="text-center">
+                                            <img id="avatar-preview" class="sj-avatar sj-avatar--lg mx-auto mb-3"
+                                                 src="{% if student_obj.photo %}{{ student_obj.photo.url }}{% else %}{% static 'dist/img/employee0.jpg' %}{% endif %}"
+                                                 alt="Foto del deportista">
+                                            <label class="form-label justify-content-center" for="photo">
+                                                <i class="fas fa-camera"></i>Cambiar foto
+                                            </label>
+                                            <input type="file" class="custom-file" id="photo" name="photo"
+                                                   accept="image/*">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-lg-9 order-lg-1">
                                         <div class="row">
-                                            <div class="col-lg-6">
-                                                <div class="form-group mb-2">
-                                                    <label class="form-label">Nombres <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control" name="first_name" required
+                                            <div class="col-12 col-md-6">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="first_name">
+                                                        <i class="fas fa-user"></i>Nombres <span class="sj-req">*</span>
+                                                    </label>
+                                                    <input type="text" class="form-control" id="first_name"
+                                                           name="first_name" required autocomplete="given-name"
                                                            value="{% if student_obj.first_name %}{{ student_obj.first_name }}{% if student_obj.second_name %} {{ student_obj.second_name }}{% endif %}{% endif %}">
                                                 </div>
                                             </div>
-                                            <div class="col-lg-6">
-                                                <div class="form-group mb-2">
-                                                    <label class="form-label">Apellidos <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control" name="surname" required
+                                            <div class="col-12 col-md-6">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="surname">
+                                                        <i class="fas fa-user"></i>Apellidos <span class="sj-req">*</span>
+                                                    </label>
+                                                    <input type="text" class="form-control" id="surname"
+                                                           name="surname" required autocomplete="family-name"
                                                            value="{% if student_obj.surname %}{{ student_obj.surname }}{% if student_obj.second_surname %} {{ student_obj.second_surname }}{% endif %}{% endif %}">
                                                 </div>
                                             </div>
                                         </div>
+
                                         <div class="row">
-                                            <div class="col-lg-8">
-                                                <div class="form-group mb-2">
-                                                    <label class="form-label">Domicilio</label>
-                                                    <input type="text" class="form-control" name="address" 
+                                            <div class="col-12 col-md-6">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="address">
+                                                        <i class="fas fa-location-dot"></i>Domicilio
+                                                    </label>
+                                                    <input type="text" class="form-control" id="address"
+                                                           name="address"
                                                            value="{{ student_obj.address|default:'' }}">
                                                 </div>
                                             </div>
-                                            <div class="col-lg-4">
-                                                <div class="form-group mb-2">
-                                                    <label class="form-label">Teléfono</label>
-                                                    <input type="tel" class="form-control" name="phone" 
+                                            <div class="col-12 col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="phone">
+                                                        <i class="fas fa-phone"></i>Teléfono
+                                                    </label>
+                                                    <input type="tel" class="form-control" id="phone"
+                                                           name="phone" autocomplete="tel"
                                                            value="{{ student_obj.phone|default:'' }}">
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-3 d-flex justify-content-center align-self-center">
-                                        <div class="avatar-preview-container">
-                                            <img id="avatar-preview" 
-                                                 src="{% if student_obj.photo %}{{ student_obj.photo.url }}{% else %}{% static 'dist/img/employee0.jpg' %}{% endif %}"
-                                                 alt="Avatar" class="avatar-preview-img">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row mt-2">
-                                    <div class="col-md-12">
-                                        <div class="form-group mb-0">
-                                            <label class="form-label">Foto del Deportista</label>
-                                            <div class="custom-file">
-                                                <input type="file" class="custom-file-input" id="photo" name="photo" accept="image/*">
-                                                <label class="custom-file-label" for="photo">{% if student_obj.photo %}Cambiar Imagen{% else %}Subir Imagen{% endif %}</label>
+                                            <div class="col-12 col-md-3">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-label" for="subsidiary">
+                                                        <i class="fas fa-building"></i>Sede
+                                                    </label>
+                                                    <select class="form-control" id="subsidiary" name="subsidiary">
+                                                        <option value="">Sin sede asignada</option>
+                                                        {% for subsidiary in subsidiaries %}
+                                                            <option value="{{ subsidiary.id }}"
+                                                                    {% if student_obj.subsidiary and student_obj.subsidiary.id == subsidiary.id %}selected{% endif %}>
+                                                                {{ subsidiary.name }}
+                                                            </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Datos del Padre/Madre/Apoderado -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="card card-outline card-info">
-                            <div class="card-header">
-                                <h6 class="card-title text-info mb-0">
-                                    <i class="fas fa-users mr-2"></i>Datos del Padre/Madre/Apoderado
-                                </h6>
-                            </div>
-                            <div class="card-body">
+                        <!-- ============ APODERADO ============ -->
+                        <div class="col-12">
+                            <div class="sj-fieldset">
+                                <div class="sj-fieldset__head">
+                                    <span class="sj-fieldset__icon sj-fieldset__icon--info">
+                                        <i class="fas fa-user-shield"></i>
+                                    </span>
+                                    <div>
+                                        <h3 class="sj-fieldset__title">Padre / madre / apoderado</h3>
+                                        <p class="sj-fieldset__sub">Contacto responsable del deportista</p>
+                                    </div>
+                                </div>
+
                                 <div class="row">
-                                    <div class="col-md-3">
+                                    <div class="col-12 col-md-3">
                                         <div class="form-group mb-0">
-                                            <label class="form-label">Nombres</label>
-                                            <input type="text" class="form-control" name="parent_first_name" 
+                                            <label class="form-label" for="parent_first_name">Nombres</label>
+                                            <input type="text" class="form-control" id="parent_first_name"
+                                                   name="parent_first_name"
                                                    value="{{ student_obj.parent_first_name|default:'' }}">
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-12 col-md-3">
                                         <div class="form-group mb-0">
-                                            <label class="form-label">Apellidos</label>
-                                            <input type="text" class="form-control" name="parent_surname" 
+                                            <label class="form-label" for="parent_surname">Apellidos</label>
+                                            <input type="text" class="form-control" id="parent_surname"
+                                                   name="parent_surname"
                                                    value="{{ student_obj.parent_surname|default:'' }}">
                                         </div>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-6 col-md-2">
                                         <div class="form-group mb-0">
-                                            <label class="form-label">Tipo Doc.</label>
-                                            <select class="form-control" name="parent_document">
-                                                <option value="01" {% if student_obj.parent_document == '01' %}selected{% endif %}>DNI</option>
-                                                <option value="06" {% if student_obj.parent_document == '06' %}selected{% endif %}>RUC</option>
+                                            <label class="form-label" for="parent_document">Tipo doc.</label>
+                                            <select class="form-control" id="parent_document" name="parent_document">
+                                                {% for value, label in document_choices %}
+                                                    <option value="{{ value }}"
+                                                            {% if value == student_obj.parent_document %}selected{% else %}{% if not student_obj.parent_document and value == no_document %}selected{% endif %}{% endif %}>
+                                                        {{ label }}
+                                                    </option>
+                                                {% endfor %}
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-6 col-md-2">
                                         <div class="form-group mb-0">
-                                            <label class="form-label">Número</label>
-                                            <input type="text" class="form-control" name="parent_document_number" 
+                                            <label class="form-label" for="parent_document_number">Número</label>
+                                            <input type="text" class="form-control" id="parent_document_number"
+                                                   name="parent_document_number"
                                                    value="{{ student_obj.parent_document_number|default:'' }}">
                                         </div>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-12 col-md-2">
                                         <div class="form-group mb-0">
-                                            <label class="form-label">Teléfono</label>
-                                            <input type="tel" class="form-control" name="parent_phone" 
+                                            <label class="form-label" for="parent_phone">Teléfono</label>
+                                            <input type="tel" class="form-control" id="parent_phone"
+                                                   name="parent_phone"
                                                    value="{{ student_obj.parent_phone|default:'' }}">
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Historia Clínica -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="card card-outline card-warning">
-                            <div class="card-header">
-                                <h6 class="card-title text-warning mb-0">
-                                    <i class="fas fa-heartbeat mr-2"></i>Historia Clínica
-                                </h6>
-                            </div>
-                            <div class="card-body">
+                        <!-- ============ HISTORIA CLÍNICA ============ -->
+                        <div class="col-12">
+                            <div class="sj-fieldset mb-0">
+                                <div class="sj-fieldset__head">
+                                    <span class="sj-fieldset__icon sj-fieldset__icon--warning">
+                                        <i class="fas fa-heart-pulse"></i>
+                                    </span>
+                                    <div>
+                                        <h3 class="sj-fieldset__title">Historia clínica</h3>
+                                        <p class="sj-fieldset__sub">Datos médicos relevantes para el entrenamiento</p>
+                                    </div>
+                                </div>
+
                                 <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="form-group mb-2">
-                                            <label class="form-label">Enfermedades</label>
-                                            <textarea class="form-control" name="diseases" rows="2">{{ student_obj.diseases|default:'' }}</textarea>
+                                    <div class="col-12 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="diseases">Enfermedades</label>
+                                            <textarea class="form-control" id="diseases" name="diseases"
+                                                      rows="2">{{ student_obj.diseases|default:'' }}</textarea>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group mb-2">
-                                            <label class="form-label">Alergia a Medicamentos</label>
-                                            <textarea class="form-control" name="medication_allergies" rows="2">{{ student_obj.medication_allergies|default:'' }}</textarea>
+                                    <div class="col-12 col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="medication_allergies">Alergias</label>
+                                            <textarea class="form-control" id="medication_allergies"
+                                                      name="medication_allergies"
+                                                      rows="2">{{ student_obj.medication_allergies|default:'' }}</textarea>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group mb-2">
-                                            <label class="form-label">Seguro</label>
-                                            <input type="text" class="form-control" name="student_insurance" 
+                                    <div class="col-12 col-md-4">
+                                        <div class="form-group mb-0">
+                                            <label class="form-label" for="student_insurance">Seguro</label>
+                                            <input type="text" class="form-control" id="student_insurance"
+                                                   name="student_insurance"
                                                    value="{{ student_obj.student_insurance|default:'' }}">
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6">
+
+                                <div class="row mt-1">
+                                    <div class="col-12 col-md-4">
                                         <div class="form-group mb-0">
-                                            <label class="form-label">Lesiones Deportivas</label>
-                                            <textarea class="form-control" name="sports_injuries" rows="2">{{ student_obj.sports_injuries|default:'' }}</textarea>
+                                            <label class="form-label" for="sports_injuries">Lesiones deportivas</label>
+                                            <textarea class="form-control" id="sports_injuries"
+                                                      name="sports_injuries"
+                                                      rows="2">{{ student_obj.sports_injuries|default:'' }}</textarea>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-12 col-md-8">
                                         <div class="form-group mb-0">
-                                            <label class="form-label">Observaciones</label>
-                                            <textarea class="form-control" name="observations" rows="2">{{ student_obj.observations|default:'' }}</textarea>
+                                            <label class="form-label" for="observations">Observaciones</label>
+                                            <textarea class="form-control" id="observations" name="observations"
+                                                      rows="2">{{ student_obj.observations|default:'' }}</textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -227,80 +333,104 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="modal-footer bg-light border-0 p-3">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                    <i class="fas fa-times mr-2"></i>Cancelar
-                </button>
-                <button id="btn-update-student" type="submit" class="btn btn-warning">
-                    <i class="fas fa-save mr-2"></i>Actualizar Deportista
-                </button>
-            </div>
-        </form>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-xmark"></i>Cancelar
+                    </button>
+                    <button id="btn-update-student" type="submit" class="btn btn-primary">
+                        <i class="fas fa-floppy-disk"></i>Guardar cambios
+                    </button>
+                </div>
+            </form>
+        {% endif %}
     </div>
 </div>
 
-<style>
-    .avatar-preview-container {
-        width: 150px; height: 150px;
-        border: 2px solid #dee2e6; border-radius: 8px; overflow: hidden;
-    }
-    .avatar-preview-img { width: 100%; height: 100%; object-fit: cover; }
-    .card { border-radius: 8px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .card-outline.card-primary { border-top: 3px solid #007bff; }
-    .card-outline.card-info { border-top: 3px solid #17a2b8; }
-    .card-outline.card-warning { border-top: 3px solid #ffc107; }
-    .overlay {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(255, 255, 255, 0.9); display: flex;
-        align-items: center; justify-content: center; z-index: 1000;
-    }
-    .custom-file-label::after { content: "Buscar"; }
-</style>
-
 <script type="text/javascript">
-$(document).ready(function() {
-    $('#photo').on('change', function() {
-        var file = this.files[0];
-        $(this).next('.custom-file-label').html($(this).val().split('\\').pop() || 'Subir Imagen');
-        if (file) {
-            var reader = new FileReader();
-            reader.onload = function(e) { $('#avatar-preview').attr('src', e.target.result); };
-            reader.readAsDataURL(file);
+    $(document).ready(function () {
+        var NO_DOCUMENT = '{{ no_document }}';
+
+        function syncDocumentState() {
+            var isNone = $('#document').val() === NO_DOCUMENT;
+            var $num = $('#document_number');
+
+            if (isNone) {
+                $num.val('').prop('disabled', true)
+                    .attr('placeholder', 'No aplica')
+                    .addClass('sj-input-muted');
+                $('#document-hint span').html('El número se guardará en blanco.');
+            } else {
+                $num.prop('disabled', false)
+                    .attr('placeholder', 'Ej: 70123456')
+                    .removeClass('sj-input-muted');
+                $('#document-hint span').html('El número es opcional, puedes dejarlo vacío.');
+            }
         }
-    });
 
-    $('#form-student-update').submit(function(event) {
-        event.preventDefault();
-        let data = new FormData($(this).get(0));
-        $('#btn-update-student').attr("disabled", "true");
-        $('#modal-loader').show();
+        $('#document').on('change', syncDocumentState);
+        syncDocumentState();
 
-        $.ajax({
-            url: $(this).attr('action'),
-            type: 'POST',
-            data: data,
-            cache: false,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.success) {
-                    toastr.success(response.message);
-                    $('#modal_student_update').modal('hide');
-                    setTimeout(() => location.reload(), 800);
-                } else {
-                    toastr.error(response.message);
-                    $('#btn-update-student').removeAttr("disabled");
+        $('#photo').on('change', function () {
+            var file = this.files && this.files[0];
+            var label = $(this).closest('.custom-file').find('.custom-file-label');
+
+            if (file) {
+                label.text(file.name.length > 24 ? file.name.slice(0, 21) + '...' : file.name);
+                if (file.size > 5 * 1024 * 1024) {
+                    toastr.warning('La imagen supera los 5 MB. Elige una más liviana.');
+                    $(this).val('');
+                    return;
                 }
-                $('#modal-loader').hide();
-            },
-            error: function() {
-                toastr.error('Error al actualizar');
-                $('#modal-loader').hide();
-                $('#btn-update-student').removeAttr("disabled");
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $('#avatar-preview').attr('src', e.target.result);
+                };
+                reader.readAsDataURL(file);
             }
         });
+
+        $('#form-student-update').submit(function (event) {
+            event.preventDefault();
+
+            var form = this;
+            var $form = $(form);
+            var $btn = $('#btn-update-student');
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            var data = new FormData(form);
+
+            $btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i>Guardando...');
+            $('#modal-loader').show();
+
+            $.ajax({
+                url: $form.attr('action'),
+                type: 'POST',
+                data: data,
+                cache: false,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        $('#modal_student_update').modal('hide');
+                        setTimeout(() => location.reload(), 900);
+                    } else {
+                        toastr.error(response.message);
+                        $btn.prop('disabled', false).html('<i class="fas fa-floppy-disk"></i>Guardar cambios');
+                        $('#modal-loader').hide();
+                    }
+                },
+                error: function () {
+                    toastr.error('No se pudo actualizar el deportista');
+                    $btn.prop('disabled', false).html('<i class="fas fa-floppy-disk"></i>Guardar cambios');
+                    $('#modal-loader').hide();
+                }
+            });
+        });
     });
-});
 </script>

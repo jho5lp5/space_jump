@@ -1,118 +1,152 @@
 {% extends 'home.html' %}
 {% load static %}
-{% block title %}
-    Gestión de Deportistas
-{% endblock title %}
+
+{% block title %}Deportistas · SPACE JUMP{% endblock title %}
 
 {% block body %}
-    <style>
-        .btn {
-            border-radius: 25px;
-        }
+    <div class="p-3 p-md-4">
 
-        .btn-sm {
-            border-radius: 20px;
-        }
-    </style>
-    <div class="content-header">
-        <div class="container-fluid roboto-condensed-regular">
-            <!-- Header con estadísticas -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h1 class="m-0 text-dark">
-                                <i class="fas fa-user-graduate mr-2"></i>Gestión de Deportistas
-                            </h1>
-                            <p class="text-muted mb-0">Administra la información de los deportistas de la academia</p>
-                        </div>
-                        <div class="d-flex">
-                            <button type="button" class="btn btn-info" id="btn-list-student">
-                                <i class="fas fa-list mr-1"></i>Lista de Deportistas
-                            </button>
-                        </div>
+        <!-- ============ CABECERA ============ -->
+        <div class="sj-page-head">
+            <div class="sj-page-head__left">
+                <span class="sj-page-icon"><i class="fas fa-basketball-ball"></i></span>
+                <div>
+                    <h1 class="sj-page-title">Deportistas</h1>
+                    <p class="sj-page-sub">
+                        Gestiona el padrón de la academia: datos personales, documentación y ficha médica.
+                    </p>
+                </div>
+            </div>
+            <div class="sj-page-head__actions">
+                <a href="{% url 'apps.students:get_enrollment_list' %}" class="btn btn-secondary btn-hide-mobile">
+                    <i class="fas fa-calendar-plus"></i>Inscripciones
+                </a>
+                <button type="button" onclick="showModalView('modal_student_create')" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>Nuevo deportista
+                </button>
+            </div>
+        </div>
+
+        <!-- ============ KPIs ============ -->
+        <div class="row mb-3">
+            <div class="col-6 col-lg-3 mb-3">
+                <div class="sj-kpi">
+                    <span class="sj-kpi__icon"><i class="fas fa-users"></i></span>
+                    <div>
+                        <p class="sj-kpi__label">Total activos</p>
+                        <div class="sj-kpi__value">{{ total_students }}</div>
+                        <p class="sj-kpi__meta"><i class="fas fa-check"></i> Registrados</p>
                     </div>
                 </div>
             </div>
-
-            <!-- Tarjeta de lista de deportistas -->
-            <div class="card list-student shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0 text-primary">
-                            <i class="fas fa-user-graduate mr-2"></i>Deportistas Registrados
-                        </h5>
-                        <button type="button" onclick="showModalView('modal_student_create')"
-                                class="btn btn-primary">
-                            <i class="fas fa-plus mr-1"></i>Nuevo Deportista
-                        </button>
+            <div class="col-6 col-lg-3 mb-3">
+                <div class="sj-kpi sj-kpi--warning">
+                    <span class="sj-kpi__icon"><i class="fas fa-file-circle-question"></i></span>
+                    <div>
+                        <p class="sj-kpi__label">Sin documento</p>
+                        <div class="sj-kpi__value">{{ students_without_document }}</div>
+                        <p class="sj-kpi__meta"><i class="fas fa-id-card"></i> Pendientes de DNI/RUC</p>
                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <div id="student-grid-list">
-                        {% include "students/student_grid_list.html" %}
+            </div>
+            <div class="col-6 col-lg-3 mb-3">
+                <div class="sj-kpi sj-kpi--info">
+                    <span class="sj-kpi__icon"><i class="fas fa-cake-candles"></i></span>
+                    <div>
+                        <p class="sj-kpi__label">Sin edad</p>
+                        <div class="sj-kpi__value">{{ students_without_birth_date }}</div>
+                        <p class="sj-kpi__meta"><i class="fas fa-calendar"></i> Sin fecha de nacimiento</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3 mb-3">
+                <div class="sj-kpi sj-kpi--success">
+                    <span class="sj-kpi__icon"><i class="fas fa-building"></i></span>
+                    <div>
+                        <p class="sj-kpi__label">Sedes</p>
+                        <div class="sj-kpi__value">{{ subsidiary_stats|length }}</div>
+                        <p class="sj-kpi__meta"><i class="fas fa-location-dot"></i> Con sede asignada</p>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- ============ TABLA ============ -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-table-list"></i> Padrón de deportistas
+                </h3>
+                <div class="card-tools">
+                    <button type="button" onclick="showModalView('modal_student_create')"
+                            class="btn btn-soft btn-sm">
+                        <i class="fas fa-plus"></i>Nuevo
+                    </button>
+                </div>
+            </div>
+
+            <div id="student-grid-list">
+                {% include "students/student_grid_list.html" %}
+            </div>
+        </div>
+
     </div>
 
-    <!-- Modal para crear deportista -->
-    <div class="modal fade" id="modal_student_create" data-backdrop="static" data-keyboard="false" tabindex="-1"
-         role="dialog"
-         aria-labelledby="ModalHelpTitle"
-         aria-hidden="true">
+    <!-- ============ MODALES ============ -->
+    <div class="modal fade" id="modal_student_create" tabindex="-1" role="dialog" aria-hidden="true">
         <div id="modal-student-create-content"></div>
     </div>
 
-    <!-- Modal para actualizar deportista -->
-    <div class="modal fade" id="modal_student_update" tabindex="-1" role="dialog"
-         aria-labelledby="modal_student_updateLabel" aria-hidden="true">
+    <div class="modal fade" id="modal_student_update" tabindex="-1" role="dialog" aria-hidden="true">
         <div id="modal-student-update-content"></div>
     </div>
-
 {% endblock body %}
 
 {% block extrajs %}
     <script type="text/javascript">
 
-        function showModalView(route) {
+        /* ---------- Alta de deportista ---------- */
+        function showModalView() {
             $.ajax({
-                url: '/students/' + route + '/',
+                url: '{% url "apps.students:modal_student_create" %}',
                 dataType: 'json',
                 type: 'GET',
-                data: {'pk': 1},
                 success: function (response) {
-                    $('#modal_student_create').html(response.form);
+                    $('#modal-student-create-content').html(response.form);
                     $('#modal_student_create').modal('show');
                 },
-                fail: function (response) {
-                    toastr.error('Error en la petición', '¡Mensaje!');
+                error: function () {
+                    toastr.error('No se pudo cargar el formulario de registro');
                 }
             });
         }
 
-
+        /* ---------- Edición ---------- */
         function updateStudent(pk) {
+            $('#modal-student-update-content').html(
+                '<div class="modal-dialog modal-dialog-centered" role="document">' +
+                '<div class="modal-content"><div class="modal-body text-center py-5">' +
+                '<i class="fas fa-3x fa-circle-notch fa-spin" style="color:var(--sj-orange-500)"></i>' +
+                '</div></div></div>');
+            $('#modal_student_update').modal('show');
+
             $.ajax({
                 url: '{% url "apps.students:modal_student_update" %}',
                 type: 'GET',
                 data: {'pk': pk},
                 success: function (response) {
                     $('#modal-student-update-content').html(response.form);
-                    $('#modal_student_update').modal('show');
                 },
                 error: function () {
-                    alert('Error al cargar el formulario de actualización');
+                    $('#modal_student_update').modal('hide');
+                    toastr.error('No se pudo cargar el formulario de edición');
                 }
             });
         }
 
+        /* ---------- Ficha PDF ---------- */
         function downloadStudentPDF(studentId) {
-            // Crear un enlace temporal para descargar el PDF
             const url = '{% url "apps.students:download_student_enrollment_pdf" 0 %}'.replace('0', studentId);
-
-            // Crear un elemento <a> temporal y hacer clic en él
             const link = document.createElement('a');
             link.href = url;
             link.download = '';
@@ -120,47 +154,49 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
-            // Mostrar notificación de éxito
-            if (typeof toastr !== 'undefined') {
-                toastr.success('Descargando ficha de inscripción...', 'Éxito');
-            }
+            toastr.success('Descargando ficha del deportista...');
         }
 
+        /* ---------- Filtros (tabla en escritorio, tarjetas en móvil) ---------- */
+        var STATUS_MAP = {
+            'active': function (r) { return r === 'active'; },
+            'inactive': function (r) { return r === 'inactive'; },
+            'no-document': function (r, $row) { return $row.data('doc') === 'without'; },
+            'no-age': function (r, $row) { return $row.data('age') === 'without'; }
+        };
 
-        // Búsqueda en tiempo real
-        $('#search-student').on('keyup', function () {
-            var value = $(this).val().toLowerCase();
-            $('#students-table tbody tr').filter(function () {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        function applyStudentFilters() {
+            var query = $.trim($('#search-student').val()).toLowerCase();
+            var subsidiary = $('#filter-subsidiary').val().toLowerCase();
+            var status = $('#filter-status').val();
+            var matcher = STATUS_MAP[status];
+            var visible = 0;
+
+            $('.sj-student-row').each(function () {
+                var $row = $(this);
+                var rowStatus = $row.attr('data-status') || '';
+                var rowSede = ($row.attr('data-subsidiary') || '').toLowerCase();
+                var rowSearch = ($row.attr('data-search') || '').toLowerCase();
+
+                var ok = rowSearch.indexOf(query) > -1;
+                if (ok && subsidiary) ok = (rowSede === subsidiary);
+                if (ok && matcher) ok = matcher(rowStatus, $row);
+
+                $row.toggle(ok);
+                if (ok) visible++;
             });
-        });
 
-        // Filtro por sede
-        $('#filter-subsidiary').on('change', function () {
-            var value = $(this).val().toLowerCase();
-            $('#students-table tbody tr').each(function () {
-                if (!value) {
-                    $(this).show();
-                } else {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-                }
-            });
-        });
+            $('#students-table-count').text(visible);
+            $('#students-empty-filter').toggle(visible === 0 && $('.sj-student-row').length > 0);
+        }
 
-        // Filtro por estado
-        $('#filter-status').on('change', function () {
-            var value = $(this).val();
-            $('#students-table tbody tr').each(function () {
-                if (!value) {
-                    $(this).show();
-                } else {
-                    $(this).toggle($(this).data('status') === value);
-                }
-            });
+        $(document).on('keyup search', '#search-student', applyStudentFilters);
+        $(document).on('change', '#filter-subsidiary, #filter-status', applyStudentFilters);
+        $(document).on('click', '#students-clear-filters', function () {
+            $('#search-student').val('');
+            $('#filter-subsidiary').val('');
+            $('#filter-status').val('');
+            applyStudentFilters();
         });
-
     </script>
 {% endblock extrajs %}
-
-

@@ -1,128 +1,580 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
+{% load static %}<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0B1220">
+    <title>Iniciar sesión · SPACE JUMP</title>
 
-    <!-- Google Font: Source Sans Pro -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-    <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="{% static 'plugins/fontawesome-free/css/all.min.css' %}" rel="stylesheet"/>
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
+
+<!-- Font Awesome 5 + 6 (6 debe ir despues: es la version efectiva del proyecto) -->
+    <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'fontawesomefree/css/fontawesome.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'fontawesomefree/css/brands.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'fontawesomefree/css/solid.css' %}" type="text/css">
     <!-- icheck bootstrap -->
-    <link href="{% static 'plugins/icheck-bootstrap/icheck-bootstrap.min.css' %}" rel="stylesheet"/>
+    <link rel="stylesheet" href="{% static 'plugins/icheck-bootstrap/icheck-bootstrap.min.css' %}"/>
     <link rel="stylesheet" href="{% static 'fonts/bankgothick/font-bankgothick.css' %}">
     <link rel="stylesheet" href="{% static 'assets/css/stylazos.css' %}">
     <!-- Theme style -->
-    <link href="{% static 'assets/css/adminlte.min.css' %}" rel="stylesheet"/>
+    <link rel="stylesheet" href="{% static 'assets/css/adminlte.min.css' %}"/>
+    <!-- Design system -->
+    <link rel="stylesheet" href="{% static 'assets/css/academy.css' %}">
 
     <link rel="icon" href="{% static 'assets/img/space_jump_logo_no_bg.ico' %}" type="image/ico"/>
-</head>
-<body>
-<div class="login-container">
-    <div class="login-card">
-        <div class="login-header">
-            <div class="logo-container">
-                <img src="{% static 'assets/img/space_jump_logo_no_bg.png' %}" alt="logo" class="img-fluid" width="400">
-            </div>
-                <p class="company-tagline">Academia Formativa de Basketball</p>
-        </div>
+<style>
+    /* ---------- Layout ---------- */
+    .sj-login {
+        margin: 0;
+        background: var(--sj-ink-900);
+    }
 
-        <form method="post" class="login-form">
-            {% csrf_token %}
+    .sj-login__layout {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    /* ---------- Panel de marca ---------- */
+    .sj-login__brand {
+        flex: 1 1 56%;
+        position: relative;
+        overflow: hidden;
+        background:
+            radial-gradient(900px 480px at 12% 4%, rgba(249, 115, 22, .12), transparent 62%),
+            radial-gradient(720px 460px at 96% 96%, rgba(37, 99, 235, .10), transparent 64%),
+            linear-gradient(150deg, #1B2434 0%, #16202E 55%, #121A26 100%);
+        display: flex;
+        align-items: center;
+        padding: 56px 60px;
+    }
+
+    .sj-login__brand-inner {
+        position: relative;
+        z-index: 2;
+        max-width: 520px;
+    }
+
+    .sj-login__logo {
+        width: 72px;
+        height: 72px;
+        object-fit: contain;
+        margin-bottom: 34px;
+        filter: drop-shadow(0 10px 26px rgba(249, 115, 22, .35));
+    }
+
+    .sj-login__eyebrow {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .22em;
+        text-transform: uppercase;
+        color: var(--sj-orange-400);
+        margin: 0 0 14px;
+    }
+
+    .sj-login__headline {
+        font-size: clamp(30px, 4.2vw, 46px);
+        font-weight: 800;
+        line-height: 1.08;
+        letter-spacing: -.035em;
+        color: #fff;
+        margin: 0 0 18px;
+    }
+
+    .sj-login__headline span {
+        color: var(--sj-orange-400);
+    }
+
+    .sj-login__lead {
+        font-size: 15px;
+        line-height: 1.65;
+        color: rgba(255, 255, 255, .60);
+        margin: 0 0 36px;
+        max-width: 46ch;
+    }
+
+    .sj-login__features {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 14px;
+    }
+
+.sj-login__features li {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 16px;
+        border-radius: var(--sj-r-md);
+        background: rgba(255, 255, 255, .04);
+        border: 1px solid rgba(255, 255, 255, .07);
+    }
+
+.sj-login__features i {
+        width: 40px;
+        height: 40px;
+        flex: 0 0 auto;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(249, 115, 22, .13);
+        color: var(--sj-orange-300);
+        border: 1px solid rgba(249, 115, 22, .20);
+        font-size: 1rem;
+    }
+
+    .sj-login__features strong {
+        display: block;
+        color: #fff;
+        font-size: 13.5px;
+        font-weight: 700;
+    }
+
+    .sj-login__features span {
+        display: block;
+        color: rgba(255, 255, 255, .50);
+        font-size: 12px;
+        margin-top: 1px;
+    }
+
+    .sj-login__ball {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .sj-login__ball--1 {
+        width: 260px;
+        height: 260px;
+        right: -70px;
+        bottom: -80px;
+        border: 30px solid rgba(249, 115, 22, .07);
+    }
+
+    .sj-login__ball--2 {
+        width: 120px;
+        height: 120px;
+        right: 32%;
+        top: 8%;
+        border: 16px solid rgba(255, 255, 255, .04);
+    }
+
+    /* ---------- Panel del formulario ---------- */
+    .sj-login__panel {
+        flex: 1 1 44%;
+        background: var(--sj-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 32px;
+    }
+
+    .sj-login__card {
+        width: 100%;
+        max-width: 420px;
+        background: var(--sj-surface);
+        border: 1px solid var(--sj-border);
+        border-radius: var(--sj-r-xl);
+        box-shadow: var(--sj-shadow-lg);
+        padding: 34px 32px 28px;
+    }
+
+    .sj-login__mobile-brand {
+        display: none;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 26px;
+    }
+
+    .sj-login__mobile-brand img {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+    }
+
+    .sj-login__mobile-brand span {
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--sj-text);
+        letter-spacing: -.02em;
+        line-height: 1.1;
+    }
+
+    .sj-login__mobile-brand small {
+        display: block;
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: var(--sj-orange-600);
+    }
+
+    .sj-login__header {
+        margin-bottom: 26px;
+    }
+
+    .sj-login__title {
+        font-size: 23px;
+        font-weight: 800;
+        color: var(--sj-text);
+        letter-spacing: -.03em;
+        margin: 0 0 6px;
+    }
+
+    .sj-login__sub {
+        font-size: 13.5px;
+        color: var(--sj-text-3);
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    /* ---------- Campos ---------- */
+    .sj-field {
+        margin-bottom: 18px;
+    }
+
+    .sj-field__label {
+        display: block;
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: var(--sj-text-2);
+        margin-bottom: 7px;
+    }
+
+    .sj-field__control {
+        position: relative;
+    }
+
+    .sj-field__icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--sj-text-3);
+        font-size: 14px;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .sj-field__input {
+        width: 100%;
+        height: 48px;
+        padding: 0 14px 0 44px;
+        border: 1px solid var(--sj-border-strong);
+        border-radius: var(--sj-r-sm);
+        background: var(--sj-surface);
+        font-family: var(--sj-font);
+        font-size: 14.5px;
+        font-weight: 500;
+        color: var(--sj-text);
+        transition: border-color var(--sj-fast), box-shadow var(--sj-fast);
+    }
+
+    .sj-field__input--with-btn {
+        padding-right: 48px;
+    }
+
+    .sj-field__input::placeholder {
+        color: #A9B5C6;
+    }
+
+    .sj-field__input:focus {
+        outline: none;
+        border-color: var(--sj-orange-400);
+        box-shadow: var(--sj-shadow-focus);
+    }
+
+    .sj-field__input:focus ~ .sj-field__icon {
+        color: var(--sj-orange-500);
+    }
+
+    .sj-field__btn {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 36px;
+        height: 36px;
+        border: 0;
+        background: transparent;
+        color: var(--sj-text-3);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all var(--sj-fast);
+    }
+
+    .sj-field__btn:hover {
+        background: var(--sj-surface-3);
+        color: var(--sj-orange-600);
+    }
+
+    /* ---------- Botón ---------- */
+    .sj-login__submit {
+        width: 100%;
+        height: 50px;
+        margin-top: 6px;
+        border: 0;
+        border-radius: var(--sj-r-sm);
+        background: linear-gradient(120deg, var(--sj-orange-400), var(--sj-orange-600));
+        color: #fff;
+        font-family: var(--sj-font);
+        font-size: 14.5px;
+        font-weight: 700;
+        letter-spacing: .01em;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+box-shadow: 0 6px 18px rgba(249, 115, 22, .18);
+        transition: transform var(--sj-fast), box-shadow var(--sj-fast), filter var(--sj-fast);
+    }
+
+.sj-login__submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 26px rgba(249, 115, 22, .26);
+        filter: brightness(1.03);
+    }
+
+    .sj-login__submit:active {
+        transform: translateY(0);
+    }
+
+    .sj-login__submit:focus {
+        outline: none;
+        box-shadow: var(--sj-shadow-focus);
+    }
+
+    /* ---------- Avisos ---------- */
+    .sj-alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: var(--sj-r-sm);
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.45;
+        margin-bottom: 20px;
+        border: 1px solid;
+    }
+
+    .sj-alert i {
+        margin-top: 1px;
+    }
+
+    .sj-alert--danger {
+        background: var(--sj-danger-bg);
+        border-color: var(--sj-danger-border);
+        color: #BE123C;
+    }
+
+    .sj-alert--warning {
+        background: var(--sj-warning-bg);
+        border-color: var(--sj-warning-border);
+        color: #B45309;
+    }
+
+    /* ---------- Pie ---------- */
+    .sj-login__footer {
+        margin-top: 24px;
+        padding-top: 18px;
+        border-top: 1px solid var(--sj-border);
+        text-align: center;
+    }
+
+    .sj-login__support {
+        font-size: 12px;
+        color: var(--sj-text-2);
+        margin: 0 0 4px;
+    }
+
+    .sj-login__support i {
+        color: var(--sj-orange-500);
+        margin-right: 5px;
+    }
+
+    .sj-login__version {
+        font-size: 11px;
+        color: var(--sj-text-3);
+        margin: 0;
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 1199.98px) {
+        .sj-login__brand {
+            flex-basis: 48%;
+            padding: 44px 40px;
+        }
+
+        .sj-login__panel {
+            flex-basis: 52%;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        .sj-login__brand {
+            display: none;
+        }
+
+        .sj-login__panel {
+            flex: 1 1 100%;
+        }
+
+        .sj-login__mobile-brand {
+            display: flex;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .sj-login__panel {
+            padding: 20px 14px;
+            background: var(--sj-surface);
+        }
+
+        .sj-login__card {
+            border: 0;
+            box-shadow: none;
+            padding: 8px 6px;
+            border-radius: 0;
+            background: transparent;
+        }
+
+        .sj-login__title {
+            font-size: 20px;
+        }
+
+        .sj-field__input {
+            height: 50px;
+            font-size: 16px;
+        }
+    }
+</style>
+</head>
+<body class="sj-login">
+
+<div class="sj-login__layout">
+
+    <!-- ============ PANEL DE MARCA ============ -->
+    <section class="sj-login__brand">
+        <div class="sj-login__brand-inner">
+            <img class="sj-login__logo"
+                 src="{% static 'assets/img/space_jump_logo_no_bg.png' %}" alt="Space Jump">
+
+            <p class="sj-login__eyebrow">Academia Formativa de Basketball</p>
+            <h1 class="sj-login__headline">
+                Todo tu <span>entrenamiento</span><br>en una sola cancha.
+            </h1>
+            <p class="sj-login__lead">
+                Centraliza deportistas, ciclos, horarios de entrenamiento, inscripciones
+                y la operación financiera de tu academia.
+            </p>
+
+            <ul class="sj-login__features">
+                <li>
+                    <i class="fas fa-basketball-ball"></i>
+                    <div>
+                        <strong>Padón de deportistas</strong>
+                        <span>Ficha, historia clínica y documentos</span>
+                    </div>
+                </li>
+                <li>
+                    <i class="fas fa-calendar-days"></i>
+                    <div>
+                        <strong>Ciclos y turnos</strong>
+                        <span>Programación por edad y horario</span>
+                    </div>
+                </li>
+                <li>
+                    <i class="fas fa-chart-line"></i>
+                    <div>
+                        <strong>Indicadores en vivo</strong>
+                        <span>Ingresos, asistentes y rendimiento</span>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="sj-login__ball sj-login__ball--1"></div>
+            <div class="sj-login__ball sj-login__ball--2"></div>
+        </div>
+    </section>
+
+    <!-- ============ FORMULARIO ============ -->
+    <section class="sj-login__panel">
+        <div class="sj-login__card">
+            <div class="sj-login__mobile-brand">
+                <img src="{% static 'assets/img/space_jump_logo_no_bg.png' %}" alt="Space Jump">
+                <span>SPACE JUMP<small>Basketball Academy</small></span>
+            </div>
+
+            <header class="sj-login__header">
+                <h2 class="sj-login__title">Iniciar sesión</h2>
+                <p class="sj-login__sub">Ingresa tus credenciales para acceder al panel de control.</p>
+            </header>
 
             {% if form.non_field_errors %}
                 {% for error in form.non_field_errors %}
-                    <div class="error-message {% if 'inactivo' in error %}inactive-user{% endif %}">
-                        <span class="material-icons">{% if 'inactivo' in error %}warning{% else %}error{% endif %}</span>
-                        {{ error }}
+                    <div class="sj-alert sj-alert--{% if 'inactivo' in error %}warning{% else %}danger{% endif %}">
+                        <i class="fas {% if 'inactivo' in error %}fa-user-clock{% else %}fa-circle-exclamation{% endif %}"></i>
+                        <span>{{ error }}</span>
                     </div>
                 {% endfor %}
             {% elif form.errors %}
-                <div class="error-message">
-                    <span class="material-icons">error</span>
-                    Usuario o contraseña incorrectos
+                <div class="sj-alert sj-alert--danger">
+                    <i class="fas fa-circle-exclamation"></i>
+                    <span>Usuario o contraseña incorrectos</span>
                 </div>
             {% endif %}
 
-            <div class="form-field">
-                <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--with-leading-icon">
-                    <span class="material-icons mdc-text-field__icon mdc-text-field__icon--leading">person</span>
-                    <input type="text" name="username" class="mdc-text-field__input" id="id_username"
-                           placeholder="Usuario" required>
-                    <div class="mdc-notched-outline">
-                        <div class="mdc-notched-outline__leading"></div>
-                        <div class="mdc-notched-outline__notch">
-                            <label class="mdc-floating-label" for="id_username">Usuario</label>
-                        </div>
-                        <div class="mdc-notched-outline__trailing"></div>
+            <form method="post" class="sj-login__form">
+                {% csrf_token %}
+
+                <div class="sj-field">
+                    <label class="sj-field__label" for="id_username">Usuario</label>
+                    <div class="sj-field__control">
+                        <i class="fas fa-user sj-field__icon"></i>
+                        <input type="text" name="username" id="id_username"
+                               class="sj-field__input" placeholder="Ingresa tu usuario"
+                               autocomplete="username" required autofocus>
                     </div>
                 </div>
-            </div>
 
-            <div class="form-field">
-                <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--with-leading-icon">
-                    <span class="material-icons mdc-text-field__icon mdc-text-field__icon--leading">lock</span>
-                    <input type="password" name="password" class="mdc-text-field__input" id="id_password"
-                           placeholder="Contraseña" required>
-                    <div class="mdc-notched-outline">
-                        <div class="mdc-notched-outline__leading"></div>
-                        <div class="mdc-notched-outline__notch">
-                            <label class="mdc-floating-label" for="id_password">Contraseña</label>
-                        </div>
-                        <div class="mdc-notched-outline__trailing"></div>
+                <div class="sj-field">
+                    <label class="sj-field__label" for="id_password">Contraseña</label>
+                    <div class="sj-field__control">
+                        <i class="fas fa-lock sj-field__icon"></i>
+                        <input type="password" name="password" id="id_password"
+                               class="sj-field__input sj-field__input--with-btn"
+                               placeholder="Ingresa tu contraseña"
+                               autocomplete="current-password" required>
+                        <button type="button" class="sj-field__btn" id="toggle-password"
+                                aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            <div class="form-options">
-                <label class="mdc-checkbox">
-                    <input type="checkbox" class="mdc-checkbox__native-control" id="remember-me">
-                    <div class="mdc-checkbox__background">
-                        <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
-                            <path class="mdc-checkbox__checkmark-path" fill="none"
-                                  d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
-                        </svg>
-                        <div class="mdc-checkbox__mixedmark"></div>
-                    </div>
-                </label>
-                <span class="checkbox-label">Recordarme</span>
-            </div>
+                <button type="submit" class="sj-login__submit">
+                    <span>Ingresar al sistema</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
 
-            <button type="submit" class="mdc-button mdc-button--raised login-button">
-                <span class="mdc-button__ripple"></span>
-                <span class="mdc-button__label">Iniciar Sesión</span>
-            </button>
-        </form>
-
-        <div class="login-footer">
-            <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
-            <p class="support-text">Soporte técnico: soluciones@4soluciones.net</p>
+            <footer class="sj-login__footer">
+                <p class="sj-login__support">
+                    <i class="fas fa-headset"></i> Soporte: soluciones@4soluciones.net
+                </p>
+                <p class="sj-login__version">SPACE JUMP v2.0 · Sistema de gestión deportiva</p>
+            </footer>
         </div>
-
-        <div class="text-center mt-3">
-            <div class="spinner-border border-0 text-danger" role="status" style="width: auto; height: auto">
-                <img class="animation__shake img-circle" src="{% static 'assets/img/space_jump_logo_no_bg.png' %}"
-                     alt="Logo"
-                     height="40"
-                     width="40">
-                <span class="sr-only">Loading...</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="login-background">
-        <div class="background-pattern"></div>
-        <div class="floating-elements">
-            <div class="floating-panel panel-1"></div>
-            <div class="floating-panel panel-2"></div>
-            <div class="floating-panel panel-3"></div>
-        </div>
-    </div>
+    </section>
 </div>
 
 <!-- jQuery -->
@@ -132,281 +584,15 @@
 <!-- AdminLTE App -->
 <script src="{% static 'assets/js/adminlte.min.js' %}"></script>
 
-
+<script>
+    document.getElementById('toggle-password').addEventListener('click', function () {
+        var input = document.getElementById('id_password');
+        var icon = this.querySelector('i');
+        var showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        icon.className = showing ? 'fas fa-eye' : 'fas fa-eye-slash';
+        this.setAttribute('aria-label', showing ? 'Mostrar contraseña' : 'Ocultar contraseña');
+    });
+</script>
 </body>
 </html>
-<style>
-    .login-container {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #667eea 0%, #51a24b 100%);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .login-card {
-        background: white;
-        border-radius: 16px;
-        padding: 48px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        width: 100%;
-        max-width: 400px;
-        position: relative;
-        z-index: 10;
-    }
-
-    .login-header {
-        text-align: center;
-        margin-bottom: 32px;
-    }
-
-    .logo-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 16px;
-    }
-
-    .company-name {
-        font-size: 32px;
-        font-weight: 700;
-        color: #333;
-        margin: 16px 0 0 0;
-    }
-
-    .company-tagline {
-        color: #666;
-        font-size: 14px;
-        margin: 0;
-    }
-
-    .form-field {
-        margin-bottom: 24px;
-    }
-
-    .mdc-text-field {
-        width: 100%;
-        position: relative;
-    }
-
-    .mdc-text-field__input {
-        width: 100%;
-        padding: 12px 16px 12px 48px;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        font-size: 16px;
-        transition: border-color 0.3s ease;
-        background: transparent;
-        box-sizing: border-box;
-    }
-
-    .mdc-text-field__input:focus {
-        outline: none;
-        border-color: #667eea;
-    }
-
-    .mdc-text-field__input::placeholder {
-        color: #999;
-        opacity: 1;
-    }
-
-    .mdc-text-field__icon {
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #666;
-        z-index: 1;
-        font-size: 20px;
-    }
-
-    .mdc-notched-outline {
-        display: none;
-    }
-
-    .form-options {
-        display: flex;
-        align-items: center;
-        margin-bottom: 24px;
-    }
-
-    .mdc-checkbox {
-        position: relative;
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        margin-right: 8px;
-    }
-
-    .mdc-checkbox__native-control {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        cursor: pointer;
-    }
-
-    .mdc-checkbox__background {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        border: 2px solid #e0e0e0;
-        border-radius: 2px;
-        background: white;
-        transition: all 0.3s ease;
-    }
-
-    .mdc-checkbox__native-control:checked + .mdc-checkbox__background {
-        background: #667eea;
-        border-color: #667eea;
-    }
-
-    .checkbox-label {
-        color: #666;
-        font-size: 14px;
-    }
-
-    .login-button {
-        width: 100%;
-        height: 48px;
-        background: linear-gradient(135deg, #7ea070 0%, #4b84a2 100%);
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: 500;
-        color: white;
-        cursor: pointer;
-        transition: transform 0.2s ease;
-        margin-bottom: 24px;
-    }
-
-    .login-button:hover {
-        transform: translateY(-2px);
-    }
-
-    .login-footer {
-        text-align: center;
-    }
-
-    .forgot-password {
-        color: #667eea;
-        text-decoration: none;
-        font-size: 14px;
-        margin-bottom: 16px;
-        display: block;
-    }
-
-    .forgot-password:hover {
-        text-decoration: underline;
-    }
-
-    .support-text {
-        color: #999;
-        font-size: 12px;
-        margin: 0;
-    }
-
-    .error-message {
-        background: #ffebee;
-        color: #c62828;
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 24px;
-        display: flex;
-        align-items: center;
-        font-size: 14px;
-    }
-
-    .error-message .material-icons {
-        margin-right: 8px;
-        font-size: 20px;
-    }
-
-    .error-message.inactive-user {
-        background: #fff3e0;
-        color: #ef6c00;
-        border-left: 4px solid #ff9800;
-    }
-
-    .error-message.inactive-user .material-icons {
-        color: #ff9800;
-    }
-
-    .background-pattern {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image: radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-        z-index: 1;
-    }
-
-    .floating-elements {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 1;
-    }
-
-    .floating-panel {
-        position: absolute;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
-        animation: float 6s ease-in-out infinite;
-    }
-
-    .panel-1 {
-        width: 80px;
-        height: 120px;
-        top: 20%;
-        left: 10%;
-        animation-delay: 0s;
-    }
-
-    .panel-2 {
-        width: 60px;
-        height: 90px;
-        top: 60%;
-        right: 15%;
-        animation-delay: 2s;
-    }
-
-    .panel-3 {
-        width: 100px;
-        height: 60px;
-        bottom: 20%;
-        left: 20%;
-        animation-delay: 4s;
-    }
-
-    @keyframes float {
-        0%, 100% {
-            transform: translateY(0px);
-        }
-        50% {
-            transform: translateY(-20px);
-        }
-    }
-
-    @media (max-width: 480px) {
-        .login-card {
-            margin: 20px;
-            padding: 32px 24px;
-        }
-
-        .company-name {
-            font-size: 28px;
-        }
-    }
-</style>

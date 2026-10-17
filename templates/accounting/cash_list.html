@@ -8,18 +8,14 @@
 {% block body %}
 <div class="content-fluid roboto-condensed-regular">
     <!-- Content Header (Page header) -->
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">
-                        <i class="fas fa-university mr-2"></i>Gestión de Cuentas y Cajas
-                        <small class="d-block text-muted mt-1">
-                            <i class="fas fa-chart-pie mr-1"></i>
-                            <span id="accounts-indicator">Administración de cuentas bancarias y cajas registradoras</span>
-                        </small>
-                    </h1>
-                </div>
+    <div class="sj-page-head">
+        <div class="sj-page-head__left">
+            <span class="sj-page-icon"><i class="fas fa-vault"></i></span>
+            <div>
+                <h1 class="sj-page-title">Cuentas y Cajas</h1>
+                <p class="sj-page-sub" id="accounts-indicator">
+                    Administración de cuentas bancarias y cajas registradoras
+                </p>
             </div>
         </div>
     </div>
@@ -664,7 +660,7 @@ function deleteCash(cashId, cashName) {
 
 .compact-header {
     padding: 0.75rem 1rem !important;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: linear-gradient(135deg, var(--sj-tint-slate) 0%, var(--sj-mute) 100%);
     border-bottom: 1px solid rgba(0,0,0,0.125);
 }
 
