@@ -444,7 +444,16 @@
                     if (response.success) {
                         toastr.success(response.message);
                         $('#modal_student_create').modal('hide');
-                        setTimeout(() => location.reload(), 900);
+
+                        // Refresca la tabla en el sitio, sin recargar la pagina
+                        if (response.student_id) {
+                            $(document).trigger('student:saved', {
+                                id: response.student_id,
+                                mode: 'create'
+                            });
+                        } else {
+                            setTimeout(() => location.reload(), 900);
+                        }
                     } else {
                         toastr.error(response.message);
                         $btn.prop('disabled', false).html('<i class="fas fa-floppy-disk"></i>Registrar deportista');

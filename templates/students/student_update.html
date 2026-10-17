@@ -418,7 +418,16 @@
                     if (response.success) {
                         toastr.success(response.message);
                         $('#modal_student_update').modal('hide');
-                        setTimeout(() => location.reload(), 900);
+
+                        // Sustituye la fila del deportista en el sitio
+                        if (response.student_id) {
+                            $(document).trigger('student:saved', {
+                                id: response.student_id,
+                                mode: 'update'
+                            });
+                        } else {
+                            setTimeout(() => location.reload(), 900);
+                        }
                     } else {
                         toastr.error(response.message);
                         $btn.prop('disabled', false).html('<i class="fas fa-floppy-disk"></i>Guardar cambios');

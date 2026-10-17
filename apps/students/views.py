@@ -137,6 +137,35 @@ def _resolve_document(raw_document, raw_document_number):
     return document, document_number
 
 
+def student_row_html(request, student_id):
+    """Devuelve el HTML ya renderizado de un deportista.
+
+    Se usa tras guardar o actualizar para refrescar la tabla y la vista de
+    tarjetas sin recargar la pagina completa, reutilizando los mismos
+    partials que usa el listado.
+    """
+    try:
+        student = Student.objects.get(id=int(student_id))
+    except (Student.DoesNotExist, ValueError, TypeError):
+        return JsonResponse({'error': 'Deportista no encontrado'}, status=HTTPStatus.NOT_FOUND)
+
+    row_t = loader.get_template('students/_student_row.html')
+    card_t = loader.get_template('students/_student_card.html')
+    ctx = {'student': student, 'student_obj': student}
+
+    return JsonResponse({
+        'id': student.id,
+        'row': row_t.render(ctx, request),
+        'card': card_t.render(ctx, request),
+        'full_name': student.full_name,
+        'document_label': student.document_label,
+        'has_document': student.has_document,
+        'has_age': bool(student.current_age),
+        'subsidiary': student.subsidiary.name if student.subsidiary else '',
+        'is_active': student.is_active,
+    })
+
+
 def _resolve_subsidiary(post_data):
     """Obtiene la sede enviada; devuelve None si no se seleccionó ninguna."""
     subsidiary_id = _clean(post_data.get('subsidiary'))
@@ -347,7 +376,8 @@ def update_student(request):
 
             return JsonResponse({
                 'success': True,
-                'message': 'Deportista actualizado exitosamente'
+                'message': 'Deportista actualizado exitosamente',
+                'student_id': student.id
             }, status=HTTPStatus.OK)
 
         except Student.DoesNotExist:

@@ -31,7 +31,7 @@
 
     <span class="sj-toolbar__count">
         <b id="students-table-count">{{ student_set|length }}</b> /
-        {{ student_set|length }} deportistas
+        <span id="students-total">{{ student_set|length }}</span> deportistas
     </span>
 </div>
 
@@ -45,187 +45,34 @@
                     <th style="width: 130px;">Documento</th>
                     <th>Deportista</th>
                     <th style="width: 96px;">Edad</th>
-                    <th style="width: 128px;">Teléfono</th>
+                    <th style="width: 128px;">Tel&eacute;fono</th>
                     <th style="width: 140px;">Sede</th>
                     <th style="width: 104px;">Estado</th>
                     <th style="width: 108px;" class="text-right">Acciones</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="students-tbody">
                 {% for student in student_set %}
-                    <tr class="sj-student-row"
-                        data-status="{% if student.is_active %}active{% else %}inactive{% endif %}"
-                        data-subsidiary="{{ student.subsidiary.name|default:'' }}"
-                        data-doc="{% if student.has_document %}with{% else %}without{% endif %}"
-                        data-age="{% if student.current_age %}with{% else %}without{% endif %}"
-                        data-search="{{ student.full_name|default:'' }} {{ student.document_number|default:'' }} {{ student.first_name|default:'' }} {{ student.surname|default:'' }} {{ student.subsidiary.name|default:'' }}|lower">
-                        <td class="text-center">
-                            <img src="{% if student.photo %}{{ student.photo.url }}{% else %}{% static 'dist/img/employee0.jpg' %}{% endif %}"
-                                 class="sj-avatar" alt="Foto de {{ student.full_name }}">
-                        </td>
-                        <td>
-                            {% if student.has_document %}
-                                <span class="badge badge-info">
-                                    <i class="fas fa-id-card"></i>{{ student.get_document_display }}
-                                </span>
-                                <div class="sj-num" style="font-size:12.5px;margin-top:3px;">
-                                    {{ student.document_number|default:"—" }}
-                                </div>
-                            {% else %}
-                                <span class="badge badge-secondary" title="Pendiente de DNI o RUC">
-                                    <i class="fas fa-file-circle-question"></i>SIN DOCUMENTO
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="sj-user-cell">
-                                <div>
-                                    <div class="sj-user-cell__name">
-                                        {{ student.full_name|default:"Sin nombre" }}
-                                    </div>
-                                    <div class="sj-user-cell__meta">
-                                        {% if student.address %}
-                                            <i class="fas fa-location-dot mr-1"></i>{{ student.address|truncatechars:34 }}
-                                        {% else %}
-                                            <i class="fas fa-location-dot mr-1"></i>Sin domicilio
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            {% if student.current_age %}
-                                <span class="badge badge-primary">{{ student.current_age }} años</span>
-                            {% else %}
-                                <span class="sj-chip sj-chip--neutral">Sin edad</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if student.phone %}
-                                <a href="tel:{{ student.phone }}" class="sj-phone">
-                                    <i class="fas fa-phone"></i>{{ student.phone }}
-                                </a>
-                            {% elif student.parent_phone %}
-                                <a href="tel:{{ student.parent_phone }}" class="sj-phone sj-phone--muted"
-                                   title="Teléfono del apoderado">
-                                    <i class="fas fa-mobile-screen"></i>{{ student.parent_phone }}
-                                </a>
-                            {% else %}
-                                <span class="sj-text-3">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if student.subsidiary %}
-                                <span class="badge badge-primary">{{ student.subsidiary.name }}</span>
-                            {% else %}
-                                <span class="sj-chip sj-chip--neutral">Sin sede</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if student.is_active %}
-                                <span class="sj-chip sj-chip--success">Activo</span>
-                            {% else %}
-                                <span class="sj-chip sj-chip--danger">Inactivo</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="sj-actions">
-                                <button type="button" class="btn btn-sm btn-soft"
-                                        onclick="updateStudent({{ student.id }})" title="Editar">
-                                    <i class="fas fa-pen"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-info"
-                                        onclick="downloadStudentPDF({{ student.id }})" title="Ficha PDF">
-                                    <i class="fas fa-file-pdf"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                    {% include "students/_student_row.html" %}
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
     <!-- ============ VISTA TARJETAS (MÓVIL) ============ -->
-    <div class="sj-table-responsive d-md-none">
+    <div class="sj-table-responsive d-md-none" id="students-cards">
         {% for student in student_set %}
-            <div class="sj-table-card sj-student-row"
-                 data-status="{% if student.is_active %}active{% else %}inactive{% endif %}"
-                 data-subsidiary="{{ student.subsidiary.name|default:'' }}"
-                 data-doc="{% if student.has_document %}with{% else %}without{% endif %}"
-                 data-age="{% if student.current_age %}with{% else %}without{% endif %}"
-                 data-search="{{ student.full_name|default:'' }} {{ student.document_number|default:'' }} {{ student.subsidiary.name|default:'' }}|lower">
-                <div class="sj-table-card__head">
-                    <img src="{% if student.photo %}{{ student.photo.url }}{% else %}{% static 'dist/img/employee0.jpg' %}{% endif %}"
-                         class="sj-avatar" alt="Foto de {{ student.full_name }}">
-                    <div style="min-width:0;">
-                        <div class="sj-table-card__name">{{ student.full_name|default:"Sin nombre" }}</div>
-                        <div class="sj-table-card__meta">
-                            {% if student.has_document %}
-                                {{ student.get_document_display }} {{ student.document_number }}
-                            {% else %}
-                                SIN DOCUMENTO
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="sj-table-card__grid">
-                    <div>
-                        <div class="sj-label">Edad</div>
-                        <div class="sj-num" style="font-size:13px;color:var(--sj-text);">
-                            {{ student.age_display }}
-                        </div>
-                    </div>
-                    <div>
-                        <div class="sj-label">Sede</div>
-                        <div style="font-size:12.5px;color:var(--sj-text);font-weight:600;">
-                            {{ student.subsidiary.name|default:"—" }}
-                        </div>
-                    </div>
-                    <div>
-                        <div class="sj-label">Teléfono</div>
-                        <div style="font-size:12.5px;">
-                            {% if student.phone %}
-                                <a href="tel:{{ student.phone }}" class="sj-phone">
-                                    {{ student.phone }}
-                                </a>
-                            {% else %}
-                                <span class="sj-text-3">—</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div>
-                        <div class="sj-label">Estado</div>
-                        <div>
-                            {% if student.is_active %}
-                                <span class="sj-chip sj-chip--success">Activo</span>
-                            {% else %}
-                                <span class="sj-chip sj-chip--danger">Inactivo</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="sj-table-card__actions">
-                    <button type="button" class="btn btn-sm btn-soft" onclick="updateStudent({{ student.id }})">
-                        <i class="fas fa-pen"></i>Editar
-                    </button>
-                    <button type="button" class="btn btn-sm btn-info" onclick="downloadStudentPDF({{ student.id }})">
-                        <i class="fas fa-file-pdf"></i>Ficha
-                    </button>
-                </div>
-            </div>
+            {% include "students/_student_card.html" %}
         {% endfor %}
     </div>
 
 {% else %}
     <!-- ============ ESTADO VACÍO ============ -->
-    <div class="sj-empty">
+    <div class="sj-empty" id="students-empty-state">
         <div class="sj-empty__icon"><i class="fas fa-basketball-ball"></i></div>
-        <h4 class="sj-empty__title">Aún no hay deportistas</h4>
+        <h4 class="sj-empty__title">A&uacute;n no hay deportistas</h4>
         <p class="sj-empty__text">
-            Registra al primer integrante del padrón. El documento y la fecha de nacimiento
+            Registra al primer integrante del padr&oacute;n. El documento y la fecha de nacimiento
             son opcionales: puedes usar <strong>SIN DOCUMENTO</strong>.
         </p>
         <button type="button" onclick="showModalView('modal_student_create')" class="btn btn-primary btn-lg">
@@ -238,7 +85,7 @@
 <div id="students-empty-filter" class="sj-empty" style="display:none;">
     <div class="sj-empty__icon"><i class="fas fa-magnifying-glass"></i></div>
     <h4 class="sj-empty__title">Sin coincidencias</h4>
-    <p class="sj-empty__text">Ningún deportista coincide con los filtros aplicados.</p>
+    <p class="sj-empty__text">Ning&uacute;n deportista coincide con los filtros aplicados.</p>
     <button type="button" id="students-clear-filters" class="btn btn-secondary">
         <i class="fas fa-filter-circle-xmark"></i>Limpiar filtros
     </button>

@@ -1,0 +1,84 @@
+{% load static %}
+<tr class="sj-student-row"
+    data-id="{{ student.id }}"
+    data-status="{% if student.is_active %}active{% else %}inactive{% endif %}"
+    data-subsidiary="{{ student.subsidiary.name|default:'' }}"
+    data-doc="{% if student.has_document %}with{% else %}without{% endif %}"
+    data-age="{% if student.current_age %}with{% else %}without{% endif %}"
+    data-search="{{ student.full_name|default:'' }} {{ student.document_number|default:'' }} {{ student.first_name|default:'' }} {{ student.surname|default:'' }} {{ student.subsidiary.name|default:'' }}">
+    <td class="text-center">
+        <img src="{% if student.photo %}{{ student.photo.url }}{% else %}{% static 'dist/img/employee0.jpg' %}{% endif %}"
+             class="sj-avatar" alt="Foto de {{ student.full_name }}">
+    </td>
+    <td>
+        {% if student.has_document %}
+            <span class="badge badge-info"><i class="fas fa-id-card"></i>{{ student.get_document_display }}</span>
+            <div class="sj-num" style="font-size:12.5px;margin-top:3px;">{{ student.document_number|default:"&mdash;" }}</div>
+        {% else %}
+            <span class="badge badge-secondary" title="Pendiente de DNI o RUC">
+                <i class="fas fa-file-circle-question"></i>SIN DOCUMENTO
+            </span>
+        {% endif %}
+    </td>
+    <td>
+        <div class="sj-user-cell">
+            <div>
+                <div class="sj-user-cell__name">{{ student.full_name|default:"Sin nombre" }}</div>
+                <div class="sj-user-cell__meta">
+                    {% if student.address %}
+                        <i class="fas fa-location-dot mr-1"></i>{{ student.address|truncatechars:34 }}
+                    {% else %}
+                        <i class="fas fa-location-dot mr-1"></i>Sin domicilio
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </td>
+    <td>
+        {% if student.current_age %}
+            <span class="badge badge-primary">{{ student.current_age }} a&ntilde;os</span>
+        {% else %}
+            <span class="sj-chip sj-chip--neutral">Sin edad</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if student.phone %}
+            <a href="tel:{{ student.phone }}" class="sj-phone">
+                <i class="fas fa-phone"></i>{{ student.phone }}
+            </a>
+        {% elif student.parent_phone %}
+            <a href="tel:{{ student.parent_phone }}" class="sj-phone sj-phone--muted"
+               title="Tel&eacute;fono del apoderado">
+                <i class="fas fa-mobile-screen"></i>{{ student.parent_phone }}
+            </a>
+        {% else %}
+            <span class="sj-text-3">&mdash;</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if student.subsidiary %}
+            <span class="badge badge-primary">{{ student.subsidiary.name }}</span>
+        {% else %}
+            <span class="sj-chip sj-chip--neutral">Sin sede</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if student.is_active %}
+            <span class="sj-chip sj-chip--success">Activo</span>
+        {% else %}
+            <span class="sj-chip sj-chip--danger">Inactivo</span>
+        {% endif %}
+    </td>
+    <td>
+        <div class="sj-actions">
+            <button type="button" class="btn btn-sm btn-soft" data-student-action="edit"
+                    onclick="updateStudent({{ student.id }})" title="Editar">
+                <i class="fas fa-pen"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-info" data-student-action="pdf"
+                    onclick="downloadStudentPDF({{ student.id }})" title="Ficha PDF">
+                <i class="fas fa-file-pdf"></i>
+            </button>
+        </div>
+    </td>
+</tr>

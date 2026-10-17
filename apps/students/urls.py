@@ -16,6 +16,7 @@ urlpatterns = [
     path('students/update/', login_required(update_student), name='update_student'),
     path('students/search-autocomplete/', login_required(search_students_autocomplete), name='search_students_autocomplete'),
     path('students/download-pdf/<int:student_id>/', login_required(download_student_enrollment_pdf), name='download_student_enrollment_pdf'),
+    path('students/row-html/<int:student_id>/', login_required(student_row_html), name='student_row_html'),
     path('students/search/', login_required(views_cycles.search_students), name='search_students'),
 
     # =============================================================================

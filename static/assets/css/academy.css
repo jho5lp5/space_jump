@@ -112,10 +112,11 @@
     --sj-fast: .16s var(--sj-ease);
     --sj-base: .26s var(--sj-ease);
 
-    /* Capas */
+    /* Capas: el overlay debe quedar POR DEBAJO del menu y de la navbar,
+       de lo contrario los tapa y `backdrop-filter` los difumina. */
+    --sj-z-backdrop: 1030;
     --sj-z-navbar: 1038;
     --sj-z-sidebar: 1040;
-    --sj-z-backdrop: 1035;
 }
 
 /* -----------------------------------------------------------------------------
@@ -509,6 +510,7 @@ body.sidebar-collapse .main-header {
     border-right: 1px solid var(--sj-border);
     box-shadow: 1px 0 3px rgba(15, 23, 42, .03);
     padding: 0;
+    z-index: var(--sj-z-sidebar);
     transition: width var(--sj-base), transform var(--sj-base), margin-left var(--sj-base);
 }
 
@@ -3223,7 +3225,29 @@ table.dataTable thead th.sorting_desc {
     color: #fff !important;
 }
 
-/* Contenedor de cabecera de tarjeta con color solido heredado -> tinte suave */
+/* Resaltado de la fila recien guardada */
+.sj-flash {
+    animation: sj-row-flash 1.6s var(--sj-ease);
+}
+
+@keyframes sj-row-flash {
+
+    0%,
+    100% {
+        background-color: transparent;
+    }
+
+    25%,
+    60% {
+        background-color: var(--sj-orange-50);
+    }
+}
+
+.sj-student-row.sj-new td {
+    background-color: var(--sj-orange-50);
+}
+
+/* Cabecera de tarjeta con color solido heredado -> tinte suave */
 .card-header.bg-primary,
 .card-header.bg-success,
 .card-header.bg-info,
@@ -3431,9 +3455,10 @@ table.dataTable thead th.sorting_desc {
     .sj-backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(7, 12, 22, .5);
+        background: rgba(7, 12, 22, .48);
         backdrop-filter: blur(2px);
-        z-index: calc(var(--sj-z-sidebar) - 1);
+        -webkit-backdrop-filter: blur(2px);
+        z-index: var(--sj-z-backdrop);
         opacity: 0;
         visibility: hidden;
         transition: opacity var(--sj-base), visibility var(--sj-base);

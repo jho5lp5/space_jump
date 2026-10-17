@@ -1,0 +1,67 @@
+{% load static %}
+<div class="sj-table-card sj-student-row"
+     data-id="{{ student.id }}"
+     data-status="{% if student.is_active %}active{% else %}inactive{% endif %}"
+     data-subsidiary="{{ student.subsidiary.name|default:'' }}"
+     data-doc="{% if student.has_document %}with{% else %}without{% endif %}"
+     data-age="{% if student.current_age %}with{% else %}without{% endif %}"
+     data-search="{{ student.full_name|default:'' }} {{ student.document_number|default:'' }} {{ student.subsidiary.name|default:'' }}">
+    <div class="sj-table-card__head">
+        <img src="{% if student.photo %}{{ student.photo.url }}{% else %}{% static 'dist/img/employee0.jpg' %}{% endif %}"
+             class="sj-avatar" alt="Foto de {{ student.full_name }}">
+        <div style="min-width:0;">
+            <div class="sj-table-card__name">{{ student.full_name|default:"Sin nombre" }}</div>
+            <div class="sj-table-card__meta">
+                {% if student.has_document %}
+                    {{ student.get_document_display }} {{ student.document_number }}
+                {% else %}
+                    SIN DOCUMENTO
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="sj-table-card__grid">
+        <div>
+            <div class="sj-label">Edad</div>
+            <div class="sj-num" style="font-size:13px;color:var(--sj-text);">{{ student.age_display }}</div>
+        </div>
+        <div>
+            <div class="sj-label">Sede</div>
+            <div style="font-size:12.5px;color:var(--sj-text);font-weight:600;">
+                {{ student.subsidiary.name|default:"&mdash;" }}
+            </div>
+        </div>
+        <div>
+            <div class="sj-label">Tel&eacute;fono</div>
+            <div style="font-size:12.5px;">
+                {% if student.phone %}
+                    <a href="tel:{{ student.phone }}" class="sj-phone">{{ student.phone }}</a>
+                {% else %}
+                    <span class="sj-text-3">&mdash;</span>
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <div class="sj-label">Estado</div>
+            <div>
+                {% if student.is_active %}
+                    <span class="sj-chip sj-chip--success">Activo</span>
+                {% else %}
+                    <span class="sj-chip sj-chip--danger">Inactivo</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="sj-table-card__actions">
+        <button type="button" class="btn btn-sm btn-soft" data-student-action="edit"
+                onclick="updateStudent({{ student.id }})">
+            <i class="fas fa-pen"></i>Editar
+        </button>
+        <button type="button" class="btn btn-sm btn-info" data-student-action="pdf"
+                onclick="downloadStudentPDF({{ student.id }})">
+            <i class="fas fa-file-pdf"></i>Ficha
+        </button>
+    </div>
+</div>
